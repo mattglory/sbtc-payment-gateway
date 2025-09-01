@@ -1,0 +1,98 @@
+/**
+ * Authentication Middleware
+ * Handles API key validation and authentication
+ */
+
+const ApiKeyService = require('../services/apiKeyService');
+const apiKeyService = new ApiKeyService();
+
+/**
+ * Validate API key middleware
+ */
+const validateApiKey = (req, res, next) => {
+  try {
+    const apiKey = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!apiKey) {
+      return res.status(401).json({
+        error: 'Missing API key in Authorization header'
+      });
+    }
+
+    if (!apiKeyService.validate(apiKey)) {
+      return res.status(401).json({
+        error: 'Invalid API key'
+      });
+    }
+
+    // Add merchant ID to request
+    req.merchantId = apiKeyService.getMerchantId(apiKey);
+    req.apiKey = apiKey;
+    
+    next();
+  } catch (error) {
+    console.error('API key validation error:', error);
+    res.status(500).json({
+      error: 'Internal server error during authentication'
+    });
+  }
+};
+
+/**
+ * Optional API key middleware (for endpoints that work with or without auth)
+ */
+const optionalApiKey = (req, res, next) => {
+  try {
+    const apiKey = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (apiKey && apiKeyService.validate(apiKey)) {
+      req.merchantId = apiKeyService.getMerchantId(apiKey);
+      req.apiKey = apiKey;
+    }
+    
+    next();
+  } catch (error) {
+    console.error('Optional API key validation error:', error);
+    // Don't fail the request, just continue without auth
+    next();
+  }
+};
+
+/**
+ * Rate limiting middleware (basic implementation)
+ */
+const rateLimit = (windowMs = 15 * 60 * 1000, max = 100) => {
+  const requests = new Map();
+  
+  return (req, res, next) => {
+    const key = req.ip || req.connection.remoteAddress;
+    const now = Date.now();
+    const windowStart = now - windowMs;
+    
+    // Clean old requests
+    if (requests.has(key)) {
+      const userRequests = requests.get(key).filter(time => time > windowStart);
+      requests.set(key, userRequests);
+    }
+    
+    const currentRequests = requests.get(key) || [];
+    
+    if (currentRequests.length >= max) {
+      return res.status(429).json({
+        error: 'Too many requests. Please try again later.',
+        retryAfter: Math.ceil(windowMs / 1000)
+      });
+    }
+    
+    currentRequests.push(now);
+    requests.set(key, currentRequests);
+    
+    next();
+  };
+};
+
+module.exports = {
+  validateApiKey,
+  optionalApiKey,
+  rateLimit
+};

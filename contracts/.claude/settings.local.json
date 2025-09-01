@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(C:\\Users\\mattg\\sbtc-payment-gateway/**)",
+      "Read(C:\\Users\\mattg\\sbtc-payment-gateway\\backend/**)",
+      "Read(C:\\Users\\mattg\\sbtc-payment-gateway/**)",
+      "Read(C:\\Users\\mattg\\sbtc-payment-gateway/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

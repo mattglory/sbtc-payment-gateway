@@ -1,0 +1,47 @@
+[project]
+name = "sbtc-payment-gateway"
+description = "sBTC Payment Gateway for Stacks Builders Competition"
+version = "1.0.0"
+authors = ["Matt Glory <mattglory14@gmail.com>"]
+telemetry = false
+cache_dir = ".cache"
+requirements = []
+boot_contracts = []
+
+[project.costs]
+large_contract = 25000
+medium_contract = 15000
+small_contract = 5000
+tiny_contract = 1000
+
+[contracts.sbtc-payment-gateway]
+path = "contracts/sbtc-payment-gateway.clar"
+clarity_version = 2
+epoch = "2.4"
+
+[repl]
+costs_version = 1
+clarity_version = 2
+
+[repl.analysis]
+passes = ["check_checker"]
+
+[repl.analysis.check_checker]
+strict = true
+trusted_sender = false
+trusted_caller = false
+callee_filter = false
+
+# Development settings
+[repl.costs]
+analysis = 1000000
+runtime = 1000000000
+
+# Network settings for deployment
+[networks.testnet]
+stacks_node_rpc_address = "https://stacks-node-api.testnet.stacks.co"
+deployment_fee_rate = 10
+
+[networks.mainnet]
+stacks_node_rpc_address = "https://stacks-node-api.mainnet.stacks.co"
+deployment_fee_rate = 10

@@ -6,7 +6,7 @@ import './App.css';
 function App() {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
-  const handlePaymentSuccess = (payment: any) => {
+  const handlePaymentSuccess = (payment: { id: string; amount: number; status: string }) => {
     console.log('Payment successful:', payment);
     setPaymentSuccess(true);
     setTimeout(() => setPaymentSuccess(false), 5000);
