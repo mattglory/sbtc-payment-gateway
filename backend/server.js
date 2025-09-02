@@ -218,76 +218,21 @@ async function createContractTransaction(functionName, functionArgs, senderKey) 
  */
 
 /**
- * Health check endpoint with comprehensive deployment configuration
+ * Health check endpoint
  */
 app.get('/health', (req, res) => {
-  const corsOrigins = [
-    process.env.FRONTEND_URL || 'http://localhost:3000',
-    'https://sbtcpaymentgateway-matt-glorys-projects.vercel.app'
-  ];
-
   res.json({
     status: 'healthy',
+    demoMode: process.env.DEMO_MODE,
+    apiKeysConfigured: process.env.API_KEYS ? process.env.API_KEYS.split(',').length : 0,
     timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    
-    // Environment Configuration
-    environment: {
-      nodeEnv: process.env.NODE_ENV || 'development',
-      demoMode: DEMO_MODE,
-      strictApiMode: process.env.STRICT_API_MODE === 'true',
-      port: PORT
-    },
-
-    // Network Configuration
-    network: {
-      type: process.env.NODE_ENV === 'production' ? 'mainnet' : 'testnet',
-      contract: `${contractAddress}.${contractName}`,
-      contractAddress,
-      contractName
-    },
-
-    // API Key System Status
+    network: process.env.NODE_ENV === 'production' ? 'mainnet' : 'testnet',
+    contract: `${contractAddress}.${contractName}`,
     apiKeySystem: {
       demoMode: DEMO_MODE,
-      demoKeysEnabled: DEMO_MODE || (!CONFIGURED_API_KEYS.length && !process.env.STRICT_API_MODE),
-      demoKeysAvailable: DEMO_KEYS,
       configuredKeysCount: CONFIGURED_API_KEYS.length,
       registeredKeysCount: apiKeys.size,
-      strictModeEnabled: process.env.STRICT_API_MODE === 'true',
-      totalValidKeys: CONFIGURED_API_KEYS.length + apiKeys.size + (DEMO_MODE || (!CONFIGURED_API_KEYS.length && !process.env.STRICT_API_MODE) ? DEMO_KEYS.length : 0)
-    },
-
-    // CORS Configuration
-    cors: {
-      allowedOrigins: corsOrigins,
-      credentialsEnabled: true,
-      frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000 (default)'
-    },
-
-    // System Status
-    system: {
-      merchants: {
-        registered: merchants.size,
-        demo: merchants.has('demo-merchant-id') ? 1 : 0
-      },
-      payments: {
-        total: payments.size,
-        processing: [...payments.values()].filter(p => p.status === 'processing').length,
-        succeeded: [...payments.values()].filter(p => p.status === 'succeeded').length,
-        failed: [...payments.values()].filter(p => p.status === 'payment_failed').length
-      }
-    },
-
-    // Health Indicators
-    health: {
-      status: 'healthy',
-      checks: {
-        environmentVariables: process.env.NODE_ENV ? 'pass' : 'warn',
-        apiKeySystem: (CONFIGURED_API_KEYS.length > 0 || DEMO_MODE) ? 'pass' : 'warn',
-        contractConfig: contractAddress && contractName ? 'pass' : 'fail',
-        corsConfig: corsOrigins.length > 0 ? 'pass' : 'fail'
-      }
+      demoKeysAvailable: DEMO_MODE || (!CONFIGURED_API_KEYS.length && !process.env.STRICT_API_MODE)
     }
   });
 });
