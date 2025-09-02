@@ -1,9 +1,8 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import App from './App';
+import { render, screen } from "@testing-library/react";
+import App from "./App";
 
-test('renders Payment Widget Demo heading', () => {
+test("renders Payment Widget Demo heading", () => {
   render(<App />);
-  const headingElement = screen.getByText('Payment Widget Demo');
+  const headingElement = screen.getByText("Payment Widget Demo");
   expect(headingElement).toBeInTheDocument();
 });

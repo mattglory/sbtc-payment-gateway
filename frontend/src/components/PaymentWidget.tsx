@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { showConnect, openContractCall } from '@stacks/connect';
 import { StacksTestnet } from '@stacks/network';
 import { stringAsciiCV, uintCV, principalCV } from '@stacks/transactions';
@@ -7,13 +7,13 @@ import { apiService } from "../services/api";
 import { SATOSHIS_PER_BTC, DEFAULT_BTC_PRICE_USD, PAYMENT_STATES } from "../utils/constants";
 import { PaymentWidgetProps, PaymentIntent, PaymentWidgetState } from "../types";
 
-const PaymentWidget: React.FC<PaymentWidgetProps> = ({
+const PaymentWidget = ({
   amount,
   description = "Payment",
   apiKey,
   onSuccess,
   onError,
-}) => {
+}: PaymentWidgetProps) => {
   const [paymentState, setPaymentState] = useState<PaymentWidgetState>('initial');
   const [errorMessage, setErrorMessage] = useState("");
 

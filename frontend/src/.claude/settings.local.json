@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(C:\\Users\\mattg\\sbtc-payment-gateway\\frontend/**)",
+      "Bash(npm run build:*)",
+      "Read(C:\\Users\\mattg\\sbtc-payment-gateway/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
