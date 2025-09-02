@@ -3,22 +3,9 @@
  * Handles all communication with the backend payment API
  */
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
+import { PaymentIntent } from "../types";
 
-export interface PaymentIntent {
-  id: string;
-  paymentId: string;
-  amount: number;
-  fee: number;
-  currency: string;
-  status: string;
-  description?: string;
-  clientSecret: string;
-  createdAt: string;
-  expiresAt: string;
-  customerAddress?: string;
-  transactionId?: string;
-}
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
 
 export interface Merchant {
   merchantId: string;

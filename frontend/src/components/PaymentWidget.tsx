@@ -2,7 +2,7 @@ import { useState } from "react";
 import { CreditCard, CheckCircle, XCircle, Clock } from "lucide-react";
 import { apiService } from "../services/api";
 import { SATOSHIS_PER_BTC, DEFAULT_BTC_PRICE_USD, PAYMENT_STATES } from "../utils/constants";
-import { PaymentWidgetProps, PaymentIntent, PaymentWidgetState } from "../types";
+import { PaymentWidgetProps, PaymentWidgetState } from "../types";
 
 const PaymentWidget = ({
   amount,
