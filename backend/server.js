@@ -49,6 +49,22 @@ const merchants = new Map();
 const apiKeys = new Map();
 const payments = new Map();
 
+// Create demo merchant for testing
+const demoMerchant = {
+  id: 'demo-merchant-id',
+  businessName: 'Demo Store',
+  email: 'demo@example.com',
+  stacksAddress: 'ST1DEMO123ABC',
+  apiKey: 'pk_test_demo_key',
+  secretKey: 'sk_test_demo_secret',
+  isActive: true,
+  totalProcessed: 0,
+  feeCollected: 0,
+  paymentsCount: 0,
+  registeredAt: new Date().toISOString()
+};
+merchants.set('demo-merchant-id', demoMerchant);
+
 /**
  * Utility Functions
  */
@@ -71,6 +87,11 @@ function generateSecretKey() {
  * Validate if an API key exists and is valid
  */
 function validateApiKey(apiKey) {
+  // Accept demo API keys for testing
+  const demoKeys = ['pk_test_demo', 'pk_test_your_key', 'pk_test_demo_key'];
+  if (demoKeys.includes(apiKey)) {
+    return true;
+  }
   return apiKeys.has(apiKey);
 }
 
@@ -78,6 +99,11 @@ function validateApiKey(apiKey) {
  * Get merchant ID from API key
  */
 function getMerchantFromApiKey(apiKey) {
+  // Return demo merchant ID for demo API keys
+  const demoKeys = ['pk_test_demo', 'pk_test_your_key', 'pk_test_demo_key'];
+  if (demoKeys.includes(apiKey)) {
+    return 'demo-merchant-id';
+  }
   return apiKeys.get(apiKey);
 }
 
