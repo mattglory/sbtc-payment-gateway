@@ -88,7 +88,7 @@ function generateSecretKey() {
  */
 function validateApiKey(apiKey) {
   // Accept demo API keys for testing
-  const demoKeys = ['pk_test_demo', 'pk_test_your_key', 'pk_test_demo_key'];
+  const demoKeys = ['pk_test_demo', 'pk_test_your_key', 'pk_test_123'];
   if (demoKeys.includes(apiKey)) {
     return true;
   }
@@ -100,7 +100,7 @@ function validateApiKey(apiKey) {
  */
 function getMerchantFromApiKey(apiKey) {
   // Return demo merchant ID for demo API keys
-  const demoKeys = ['pk_test_demo', 'pk_test_your_key', 'pk_test_demo_key'];
+  const demoKeys = ['pk_test_demo', 'pk_test_your_key', 'pk_test_123'];
   if (demoKeys.includes(apiKey)) {
     return 'demo-merchant-id';
   }
