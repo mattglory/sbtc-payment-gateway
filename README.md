@@ -6,9 +6,9 @@
 
 ## Live Demo
 
-🌐 **[Try the Live Demo](https://sbtcpaymentgateway-3qt6i0rh8-matt-glorys-projects.vercel.app)**
+🌐 **[Try the Live Demo](https://sbtcpaymentgateway-matt-glorys-projects.vercel.app)**
 
-- **Frontend**: https://sbtcpaymentgateway-3qt6i0rh8-matt-glorys-projects.vercel.app
+- **Frontend**: https://sbtcpaymentgateway-matt-glorys-projects.vercel.app
 - **Backend API**: https://sbtc-payment-api-production.up.railway.app
 - **Health Check**: https://sbtc-payment-api-production.up.railway.app/health
 
