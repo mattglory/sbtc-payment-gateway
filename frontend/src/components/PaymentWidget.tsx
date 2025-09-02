@@ -1,7 +1,4 @@
 import { useState } from "react";
-import { showConnect, openContractCall } from '@stacks/connect';
-import { StacksTestnet } from '@stacks/network';
-import { stringAsciiCV, uintCV, principalCV } from '@stacks/transactions';
 import { CreditCard, CheckCircle, XCircle, Clock } from "lucide-react";
 import { apiService } from "../services/api";
 import { SATOSHIS_PER_BTC, DEFAULT_BTC_PRICE_USD, PAYMENT_STATES } from "../utils/constants";
