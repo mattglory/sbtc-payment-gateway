@@ -2,10 +2,10 @@
 nixPkgs = ["nodejs_22", "npm-9_x"]
 
 [phases.install]
-cmds = ["npm ci"]
+cmds = ["npm install"]
 
 [phases.build]
-cmds = ["echo 'No build step required for backend service'"]
+cmds = ["echo 'No build step required'"]
 
 [start]
 cmd = "npm run start --workspace=backend"
