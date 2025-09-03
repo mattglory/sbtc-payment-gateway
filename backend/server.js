@@ -34,12 +34,21 @@ const DEMO_KEYS = ['pk_test_demo', 'pk_test_your_key', 'pk_test_123'];
 // Middleware
 app.use(cors({
   origin: [
-    process.env.FRONTEND_URL || 'http://localhost:3000',
-    'https://sbtcpaymentgateway-matt-glorys-projects.vercel.app'
+    'http://localhost:3000',
+    'http://localhost:3001', 
+    'https://sbtcpaymentgateway.vercel.app',
+    'https://sbtcpaymentgateway-matt-glorys-projects.vercel.app',
+    'https://sbtc-payment-gateway.vercel.app',
+    /^https:\/\/.*\.vercel\.app$/  // Allow any Vercel preview URLs
   ],
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
+  exposedHeaders: ['X-Total-Count'],
+  maxAge: 86400 // 24 hours
 }));
-app.use(express.json());
+// preflight requests
+app.options('*', cors());
 
 // Stacks network configuration
 const network = process.env.NODE_ENV === 'production' 
