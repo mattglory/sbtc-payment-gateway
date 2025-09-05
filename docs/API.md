@@ -1285,4 +1285,4 @@ Please open an issue on GitHub for bugs and feature requests, or reach out via e
 
 ---
 
-*Built with ❤️ for the Stacks ecosystem - Making Bitcoin payments as simple as traditional payments*
+*Professional Bitcoin payment infrastructure built for the Stacks ecosystem*

@@ -1,10 +1,10 @@
 # sBTC Payment Gateway SDK
 
-**"Stripe for Bitcoin"** - JavaScript/TypeScript SDK for the sBTC Payment Gateway
+JavaScript/TypeScript SDK for the sBTC Payment Gateway
 
-The sBTC Payment Gateway SDK provides a simple, powerful way to integrate Bitcoin payments using Stacks' sBTC into your applications. Just like Stripe made traditional payments simple, we make Bitcoin payments effortless.
+The sBTC Payment Gateway SDK provides a streamlined interface for integrating Bitcoin payments using Stacks' sBTC into your applications. This SDK offers familiar patterns and comprehensive error handling for production-ready implementations.
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
@@ -33,7 +33,7 @@ console.log('Payment ID:', paymentIntent.id);
 console.log('Client Secret:', paymentIntent.clientSecret);
 ```
 
-## 📖 Documentation
+## Documentation
 
 ### Client Configuration
 
@@ -126,7 +126,7 @@ const status = formatPaymentStatus('requires_payment_method');
 console.log(status); // "Awaiting Payment"
 ```
 
-## ⚛️ React Integration
+## React Integration
 
 The SDK includes optional React hooks for easier frontend integration:
 
@@ -253,7 +253,7 @@ function PaymentTimer({ paymentIntent }: { paymentIntent: PaymentIntent }) {
 }
 ```
 
-## 🔧 Error Handling
+## Error Handling
 
 The SDK provides comprehensive error handling:
 
@@ -282,7 +282,7 @@ try {
 }
 ```
 
-## 🛠️ Development
+## Development
 
 ### Environment Setup
 
@@ -315,7 +315,7 @@ npm run build
 npm run build:watch
 ```
 
-## 🔑 API Key Management
+## API Key Management
 
 ### Getting API Keys
 
@@ -343,7 +343,7 @@ console.log('Valid:', validation.valid);
 console.log('Type:', validation.type); // 'demo', 'test', 'live'
 ```
 
-## 🌍 Network Support
+## Network Support
 
 The SDK supports both Stacks mainnet and testnet:
 
@@ -352,7 +352,7 @@ The SDK supports both Stacks mainnet and testnet:
 
 The network is automatically detected based on your API key and configuration.
 
-## 📊 Payment Status Flow
+## Payment Status Flow
 
 ```
 requires_payment_method → processing → succeeded
@@ -366,7 +366,7 @@ requires_payment_method → processing → succeeded
 - `payment_failed`: Payment failed (insufficient funds, invalid transaction, etc.)
 - `expired`: Payment expired before completion
 
-## 🚨 Security Best Practices
+## Security Best Practices
 
 1. **Never expose API keys in client-side code**
 2. **Use environment variables for API keys**
@@ -374,24 +374,24 @@ requires_payment_method → processing → succeeded
 4. **Implement proper error handling**
 5. **Use HTTPS for all API communications**
 
-## 🔗 Resources
+## Resources
 
 - [sBTC Documentation](https://docs.stacks.co/stacks-101/sbtc)
 - [Stacks Explorer](https://explorer.stacks.co)
 - [GitHub Repository](https://github.com/mattglory/sbtc-payment-gateway)
 
-## 📝 License
+## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
-## 🤝 Support
+## Support
 
 - **Developer**: Matt Glory
-- **📧 Email**: mattglory14@gmail.com
-- **🌍 Location**: Birmingham, UK
-- **🐛 Issues**: [GitHub Issues](https://github.com/mattglory/sbtc-payment-gateway/issues)
-- **💻 Live Demo**: [Try it now](https://sbtcpaymentgateway-matt-glorys-projects.vercel.app)
+- **Email**: mattglory14@gmail.com
+- **Location**: Birmingham, UK
+- **Issues**: [GitHub Issues](https://github.com/mattglory/sbtc-payment-gateway/issues)
+- **Live Demo**: [Try it now](https://sbtcpaymentgateway-matt-glorys-projects.vercel.app)
 
 ---
 
-**Built with ❤️ for the Bitcoin and Stacks ecosystem**
+Built for the Bitcoin and Stacks ecosystem

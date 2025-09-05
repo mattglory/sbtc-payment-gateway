@@ -1,6 +1,6 @@
 # sBTC Payment Gateway - Complete Documentation
 
-## 📋 Table of Contents
+## Table of Contents
 
 1. [Executive Summary](#executive-summary)
 2. [Technical Architecture](#technical-architecture)
@@ -13,7 +13,7 @@
 9. [Deployment](#deployment)
 10. [Roadmap](#roadmap)
 
-## 🚀 Executive Summary
+## Executive Summary
 
 **sBTC Payment Gateway** is the first Stripe-like payment infrastructure for Bitcoin on the Stacks blockchain. We're building the critical infrastructure that makes Bitcoin payments as simple as traditional online payments.
 
@@ -31,7 +31,7 @@
 - **Revenue Model**: Transaction fees (2.9% + $0.30 per transaction)
 - **Scalability**: Built for millions of transactions
 
-## 🏗️ Technical Architecture
+## Technical Architecture
 
 ### System Overview
 
@@ -95,7 +95,7 @@
 - **React Components**: Pre-built payment components
 - **Mobile SDKs**: iOS and Android libraries (roadmap)
 
-## 💰 Market Opportunity
+## Market Opportunity
 
 ### Market Size
 - **Global Payment Processing**: $87.4B (2024)
@@ -120,7 +120,7 @@
    - Professional services
    - Enterprise software
 
-## 🏢 Business Model
+## Business Model
 
 ### Revenue Streams
 
@@ -146,7 +146,7 @@
 - **Security**: Compliance and security auditing
 - **Support**: Customer success and technical support
 
-## 🚀 Getting Started
+## Getting Started
 
 ### For Merchants
 
@@ -196,7 +196,7 @@
    });
    ```
 
-## 📚 API Documentation
+## API Documentation
 
 ### Authentication
 
@@ -311,7 +311,7 @@ All errors follow a consistent format:
 - **Premium**: 1000 requests per 15 minutes
 - **Enterprise**: Custom limits
 
-## 🔒 Security & Compliance
+## Security & Compliance
 
 ### Security Measures
 
@@ -340,7 +340,7 @@ All errors follow a consistent format:
 - **Security Standards**: ISO 27001, SOC 2, PCI DSS
 - **AML/KYC**: Anti-money laundering and know-your-customer procedures
 
-## 💻 Development
+## Development
 
 ### Local Development Setup
 
@@ -414,7 +414,7 @@ npm audit
 npm run check-deps
 ```
 
-## 🚢 Deployment
+## Deployment
 
 ### Environment Setup
 
@@ -498,7 +498,7 @@ jobs:
       - run: npm run deploy
 ```
 
-## 🛣️ Roadmap
+## Roadmap
 
 ### Q1 2024 - Foundation
 - [x] Core API development
@@ -535,7 +535,7 @@ jobs:
 - [ ] Global compliance expansion
 - [ ] IPO preparation
 
-## 📞 Support & Contact
+## Support & Contact
 
 ### Developer Support
 - **Documentation**: https://docs.sbtcpay.com
@@ -555,6 +555,6 @@ jobs:
 
 ---
 
-**Built for the future of Bitcoin payments** 🚀
+**Built for the future of Bitcoin payments**
 
 *Making Bitcoin as easy to accept as traditional payments*

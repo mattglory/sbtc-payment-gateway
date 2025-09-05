@@ -1,6 +1,6 @@
 # sBTC Payment Gateway - Technical Architecture
 
-## 🏗️ System Overview
+## System Overview
 
 The sBTC Payment Gateway is a comprehensive payment infrastructure built on the Stacks blockchain, designed to make Bitcoin payments as simple as traditional online payments. The system follows a microservices architecture with clear separation of concerns.
 
@@ -57,7 +57,7 @@ The sBTC Payment Gateway is a comprehensive payment infrastructure built on the 
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-## 🎯 Design Principles
+## Design Principles
 
 ### 1. Scalability First
 - Horizontal scaling capability
@@ -83,7 +83,7 @@ The sBTC Payment Gateway is a comprehensive payment infrastructure built on the 
 - Circuit breaker patterns
 - Comprehensive monitoring and alerting
 
-## 📦 Component Architecture
+## Component Architecture
 
 ### API Gateway Layer
 
@@ -387,7 +387,7 @@ interface BlockchainService {
 }
 ```
 
-## 🔄 Data Flow
+## Data Flow
 
 ### Payment Creation Flow
 
@@ -435,7 +435,7 @@ sequenceDiagram
     W-->>C: Show Confirmation
 ```
 
-## 🚀 Performance Optimization
+## Performance Optimization
 
 ### Caching Strategy
 
@@ -472,7 +472,7 @@ sequenceDiagram
    - Service mesh for communication
    - Circuit breaker patterns
 
-## 🔒 Security Architecture
+## Security Architecture
 
 ### Authentication & Authorization
 
@@ -553,7 +553,7 @@ interface FraudDetection {
 }
 ```
 
-## 📊 Monitoring & Observability
+## Monitoring & Observability
 
 ### Application Performance Monitoring
 
@@ -636,7 +636,7 @@ info:
   - System deployments
 ```
 
-## 🌐 Deployment Architecture
+## Deployment Architecture
 
 ### Production Environment
 
@@ -711,7 +711,7 @@ stages:
       - health_check: "Production health verification"
 ```
 
-## 🔄 Disaster Recovery
+## Disaster Recovery
 
 ### Backup Strategy
 

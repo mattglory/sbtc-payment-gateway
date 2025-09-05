@@ -2,11 +2,11 @@
 
 **Stripe for Bitcoin** - A complete payment gateway that makes accepting Bitcoin via sBTC as simple as traditional payments.
 
-🏆 **Stacks Builders Competition Entry**
+**Stacks Builders Competition Entry**
 
 ## Live Demo
 
-🌐 **[Try the Live Demo](https://sbtcpaymentgateway-matt-glorys-projects.vercel.app)**
+**[Try the Live Demo](https://sbtcpaymentgateway-matt-glorys-projects.vercel.app)**
 
 - **Frontend**: https://sbtcpaymentgateway-matt-glorys-projects.vercel.app
 - **Backend API**: https://sbtc-payment-api-production.up.railway.app
@@ -14,11 +14,11 @@
 
 ## What Is This?
 
-This project demonstrates how Bitcoin payments can be as simple as using Stripe. Built specifically for the Stacks Builders Competition, it showcases a complete payment gateway ecosystem using sBTC on the Stacks blockchain.
+This project demonstrates a professional Bitcoin payment gateway using sBTC on the Stacks blockchain. Built for the Stacks Builders Competition, it provides a complete payment processing ecosystem with enterprise-grade reliability.
 
 ## Key Features
 
-- **3-Line Integration** - As simple as Stripe for developers
+- **Simple Integration** - Streamlined API following industry standards
 - **Real sBTC Processing** - Handles actual Bitcoin transactions via Stacks
 - **Complete Payment Flow** - From intent creation to confirmation
 - **Merchant Dashboard** - Business management interface
@@ -28,10 +28,10 @@ This project demonstrates how Bitcoin payments can be as simple as using Stripe.
 ## Quick Start
 
 ```javascript
-// Accept sBTC payments in just 3 lines
+// Accept sBTC payments with minimal configuration
 const widget = new SBTCPaymentWidget("pk_test_your_key");
 await widget.create({ amount: 50000, description: "Purchase" });
-// That's it! 🚀
+// Payment widget ready for customer interaction
 ```
 
 ## Architecture
@@ -245,6 +245,6 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-**Built with ❤️ for the Stacks ecosystem**
+**Built for the Stacks ecosystem**
 
-_Making Bitcoin payments as simple as traditional payments_
+_Professional Bitcoin payment infrastructure for modern applications_
