@@ -378,7 +378,7 @@ requires_payment_method → processing → succeeded
 
 - [sBTC Documentation](https://docs.stacks.co/stacks-101/sbtc)
 - [Stacks Explorer](https://explorer.stacks.co)
-- [GitHub Repository](https://github.com/your-username/sbtc-payment-gateway)
+- [GitHub Repository](https://github.com/mattglory/sbtc-payment-gateway)
 
 ## 📝 License
 
@@ -386,9 +386,11 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 🤝 Support
 
-- 📧 Email: support@sbtcpaymentgateway.com
-- 💬 Discord: [Join our community](https://discord.gg/your-invite)
-- 🐛 Issues: [GitHub Issues](https://github.com/your-username/sbtc-payment-gateway/issues)
+- **Developer**: Matt Glory
+- **📧 Email**: mattglory14@gmail.com
+- **🌍 Location**: Birmingham, UK
+- **🐛 Issues**: [GitHub Issues](https://github.com/mattglory/sbtc-payment-gateway/issues)
+- **💻 Live Demo**: [Try it now](https://sbtcpaymentgateway-matt-glorys-projects.vercel.app)
 
 ---
 

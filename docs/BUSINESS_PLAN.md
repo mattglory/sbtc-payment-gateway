@@ -481,4 +481,5 @@ sBTC Payment Gateway is positioned to become the leading Bitcoin payment infrast
 
 *Last Updated: January 2024*  
 *Version: 2.1*  
-*Contact: business@sbtcpay.com*
+*Contact: Matt Glory - mattglory14@gmail.com*  
+*Location: Birmingham, UK*

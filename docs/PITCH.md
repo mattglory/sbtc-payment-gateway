@@ -9,24 +9,28 @@
 ## 📊 Compelling Metrics & Traction
 
 ### 🎯 Market Validation
+
 - **$87.4B** Global payment processing market size
 - **15% YoY** Growth in merchant Bitcoin acceptance
 - **50M+** Online merchants worldwide (target audience)
 - **$1.2T** Bitcoin market cap demonstrating digital currency maturity
 
 ### 🚀 Technical Achievement
+
 - **99.9%** API uptime achieved in production
 - **3-line integration** for merchants (simpler than existing solutions)
 - **<100ms** Average API response time
 - **75%+** Test coverage across all critical components
 
 ### 💰 Business Progress
+
 - **$2.5M** Transaction volume processed in beta
 - **100+** Merchants in pipeline for launch
 - **5 languages** SDK support (JavaScript, Python, PHP, Go, Ruby)
 - **2.9% + $0.30** Competitive transaction fees
 
 ### 🔧 Developer Adoption
+
 - **10K+** API calls processed successfully
 - **500+** Developers engaged with documentation
 - **95%** Integration success rate for new merchants
@@ -37,21 +41,25 @@
 ## 🌟 Unique Value Proposition
 
 ### For Bitcoin Ecosystem
+
 > **"Making Bitcoin payments as easy as credit card payments"**
 
 #### 🎯 Problem We Solve
+
 - **83%** of merchants want to accept Bitcoin but find it too complex
 - **Current solutions require 2-4 weeks** to integrate vs. our 30 minutes
 - **No professional-grade infrastructure** exists for Bitcoin payments
 - **Poor developer experience** prevents mainstream adoption
 
 #### 💡 Our Innovation
+
 - **Stripe-compatible API** for familiar developer experience
 - **Built on Stacks blockchain** for Bitcoin security without complexity
 - **Complete payment ecosystem** with widgets, dashboards, and analytics
 - **Production-ready infrastructure** with enterprise-grade security
 
 ### For Broader Web3 Adoption
+
 > **"The bridge between Bitcoin and mainstream commerce"**
 
 - **Lowers barrier to entry** for Bitcoin merchant adoption
@@ -64,17 +72,20 @@
 ## 🔗 Live Demo & Resources
 
 ### 🌐 Interactive Demos
-- **Live API Demo**: [api.sbtcpay.com/demo](https://sbtc-payment-api-production.up.railway.app/health) *(Production API)*
-- **Merchant Dashboard**: [dashboard.sbtcpay.com](https://sbtcpaymentgateway-matt-glorys-projects.vercel.app) *(Live Frontend)*
-- **Developer Playground**: [docs.sbtcpay.com/playground](https://sbtcpaymentgateway-matt-glorys-projects.vercel.app) *(Interactive API testing)*
+
+- **Live API Demo**: [api.sbtcpay.com/demo](https://sbtc-payment-api-production.up.railway.app/health) _(Production API)_
+- **Merchant Dashboard**: [dashboard.sbtcpay.com](https://sbtcpaymentgateway-matt-glorys-projects.vercel.app) _(Live Frontend)_
+- **Developer Playground**: [docs.sbtcpay.com/playground](https://sbtcpaymentgateway-matt-glorys-projects.vercel.app) _(Interactive API testing)_
 
 ### 📚 Technical Resources
+
 - **Complete Documentation**: [/docs/README.md](./README.md)
 - **API Reference**: [/docs/API.md](./API.md)
 - **Architecture Guide**: [/docs/ARCHITECTURE.md](./ARCHITECTURE.md)
 - **GitHub Repository**: [github.com/sbtcpay/sbtc-payment-gateway](https://github.com/mattglory/sbtc-payment-gateway)
 
 ### 🎬 Demo Scenarios
+
 ```bash
 # 1. Create a payment intent in 3 lines
 curl -X POST https://api.sbtcpay.com/payment-intents \
@@ -95,18 +106,21 @@ const payment = await sbtcpay.paymentIntents.create({
 ## 🎯 Grant Alignment & Impact
 
 ### 🏗️ Infrastructure Development
+
 - **Building critical Bitcoin infrastructure** that enables ecosystem growth
 - **Open-source components** that benefit the entire community
 - **Developer tools and SDKs** that lower adoption barriers
 - **Security and compliance standards** that advance the industry
 
 ### 📈 Ecosystem Growth Metrics
+
 - **Target: 10,000 new merchants** accepting Bitcoin within 12 months
 - **Goal: $100M transaction volume** processed through our platform
 - **Impact: 1M+ end users** experiencing simplified Bitcoin payments
 - **Result: 50%+ reduction** in Bitcoin payment integration time
 
 ### 🌍 Real-World Bitcoin Adoption
+
 - **Merchant onboarding program** to drive practical Bitcoin usage
 - **Educational content creation** for developers and businesses
 - **Partnership development** with e-commerce platforms and payment providers
@@ -117,17 +131,21 @@ const payment = await sbtcpay.paymentIntents.create({
 ## 💡 Innovation Highlights
 
 ### 🔧 Technical Innovation
+
 1. **First Stripe-like Bitcoin API**
+
    - Familiar developer experience reduces adoption friction
    - Comprehensive error handling and debugging tools
    - Extensive documentation and code examples
 
 2. **Advanced Security Architecture**
+
    - Multi-layer security with API key authentication
    - Rate limiting and DDoS protection
    - Compliance-ready audit trails and logging
 
 3. **Real-time Payment Processing**
+
    - Webhook notifications for instant payment updates
    - Dashboard analytics for business insights
    - Mobile-responsive payment widgets
@@ -138,12 +156,15 @@ const payment = await sbtcpay.paymentIntents.create({
    - Global CDN integration for optimal performance
 
 ### 🌐 Business Model Innovation
+
 1. **Transparent Pricing**
+
    - Simple fee structure: 2.9% + $0.30 per transaction
    - No setup fees, monthly fees, or hidden costs
    - Volume discounts for high-volume merchants
 
 2. **Developer-First Approach**
+
    - Free sandbox environment for testing
    - Comprehensive SDKs in multiple languages
    - 24/7 developer support and documentation
@@ -162,18 +183,21 @@ const payment = await sbtcpay.paymentIntents.create({
 ### 📈 Fund Allocation & Milestones
 
 #### **Phase 1: Foundation ($200K - 6 months)**
+
 - **Development**: Complete production-ready platform
 - **Security**: Professional security audit and compliance
 - **Documentation**: Comprehensive developer resources
 - **Milestone**: Process $1M in transactions, onboard 100 merchants
 
 #### **Phase 2: Growth ($500K - 12 months)**
+
 - **Marketing**: Developer community engagement and content
 - **Partnerships**: E-commerce platform integrations
 - **Support**: Dedicated merchant success team
 - **Milestone**: Process $25M in transactions, onboard 1,000 merchants
 
 #### **Phase 3: Scale ($1M+ - 18 months)**
+
 - **Infrastructure**: Global scaling and performance optimization
 - **Innovation**: Advanced features and enterprise tools
 - **Expansion**: International market development
@@ -182,12 +206,14 @@ const payment = await sbtcpay.paymentIntents.create({
 ### 🎯 Success Metrics & Reporting
 
 #### **Quarterly KPIs**
+
 - **Transaction Volume**: Monthly payment processing metrics
 - **Merchant Adoption**: New merchant registrations and activation
 - **Developer Engagement**: API usage, documentation views, SDK downloads
 - **Community Growth**: GitHub stars, Discord members, social media engagement
 
 #### **Impact Measurement**
+
 - **Bitcoin Adoption**: Increase in Bitcoin payment acceptance rates
 - **Developer Productivity**: Reduction in integration time and complexity
 - **Merchant Success**: Revenue growth for Bitcoin-accepting merchants
@@ -198,24 +224,28 @@ const payment = await sbtcpay.paymentIntents.create({
 ## 🏆 Why Fund sBTC Payment Gateway?
 
 ### 🎯 Strategic Importance
+
 1. **Critical Infrastructure**: Payment processing is fundamental to Bitcoin's utility
 2. **Network Effects**: More merchants → more users → more adoption
 3. **Developer Acceleration**: Reduces barriers for Bitcoin integration
 4. **Market Leadership**: First-mover advantage in professional Bitcoin payments
 
 ### 📊 Strong Execution Track Record
+
 - **Technical Excellence**: Production-ready codebase with 75%+ test coverage
 - **Business Traction**: $2.5M+ processed, 100+ merchants in pipeline
 - **Team Experience**: Payment industry veterans with 15+ years experience
 - **Community Support**: Active developer engagement and positive feedback
 
 ### 🌟 Competitive Advantages
+
 - **Superior Developer Experience**: Stripe-like API vs. complex alternatives
 - **Modern Technology Stack**: Built on Stacks for Bitcoin security
 - **Comprehensive Solution**: Complete payment ecosystem, not just API
 - **Clear Business Model**: Proven transaction fee model with expansion opportunities
 
 ### 🚀 Scalability Potential
+
 - **Large Addressable Market**: 50M+ online merchants worldwide
 - **Growing Bitcoin Adoption**: 15% YoY growth in merchant acceptance
 - **Infrastructure Multiplier**: Each merchant can process thousands of payments
@@ -226,18 +256,20 @@ const payment = await sbtcpay.paymentIntents.create({
 ## 📞 Contact Information
 
 ### 🤝 Partnership & Grant Inquiries
-- **Email**: grants@sbtcpay.com
-- **Website**: [sbtcpay.com](https://sbtcpaymentgateway-matt-glorys-projects.vercel.app)
-- **LinkedIn**: [sBTC Payment Gateway](https://linkedin.com/company/sbtcpay)
 
-### 👥 Leadership Team
-- **CEO**: Payment industry veteran, 15 years fintech experience
-- **CTO**: Former blockchain architect, 10 years technical leadership
-- **Head of Product**: Ex-Stripe product manager, payments expertise
-- **Head of Business Development**: Enterprise partnerships and growth
+- **Email**: mattglory14@gmail.com
+- **Website**: https://sbtcpaymentgateway-matt-glorys-projects.vercel.app
+- **GitHub**: https://github.com/mattglory/sbtc-payment-gateway
+
+### 👥 Project Lead
+
+- **Developer**: Matt Glory
+- **Project**: sBTC Payment Gateway for Stacks Builders Competition
+- **Technical Focus**: Bitcoin payment infrastructure on Stacks blockchain
 
 ### 📍 Location & Presence
-- **Headquarters**: San Francisco, CA
+
+- **Headquarters**: Birmingham, UK
 - **Development**: Distributed team across US and Europe
 - **Legal**: Delaware C-Corp with proper governance structure
 
@@ -246,6 +278,7 @@ const payment = await sbtcpay.paymentIntents.create({
 ## 🔮 Vision & Long-term Impact
 
 ### 🌍 5-Year Vision
+
 > **"Becoming the Stripe of Bitcoin by powering 1M+ merchants globally"**
 
 - **$10B+** Annual transaction volume processed
@@ -254,12 +287,14 @@ const payment = await sbtcpay.paymentIntents.create({
 - **50+ countries** supported with localized solutions
 
 ### 💫 Ecosystem Impact
+
 - **Developer Ecosystem**: Thriving community of Bitcoin payment developers
 - **Merchant Success**: Thousands of businesses growing with Bitcoin payments
 - **User Experience**: Bitcoin payments as simple as credit card payments
 - **Industry Leadership**: Setting standards for Bitcoin payment infrastructure
 
 ### 🏗️ Technology Evolution
+
 - **Lightning Network**: Integration for instant, low-cost payments
 - **Multi-chain Support**: Expansion to other Bitcoin layers and networks
 - **DeFi Integration**: Connection to decentralized finance protocols
@@ -271,15 +306,16 @@ const payment = await sbtcpay.paymentIntents.create({
 
 ---
 
-*Last Updated: January 2024*  
-*Version: 1.0*  
-*Contact: grants@sbtcpay.com*
+_Last Updated: January 2024_  
+_Version: 1.0_  
+_Contact: grants@sbtcpay.com_
 
 ---
 
 ### 📋 Appendix: Technical Proof Points
 
 #### **Code Quality Metrics**
+
 ```bash
 # Comprehensive test coverage
 npm run test:coverage
@@ -299,6 +335,7 @@ npm run lint && npm run typecheck
 ```
 
 #### **Deployment Readiness**
+
 - ✅ Production Docker containers
 - ✅ CI/CD pipeline with automated testing
 - ✅ Monitoring and alerting systems
@@ -306,6 +343,7 @@ npm run lint && npm run typecheck
 - ✅ Security audit and compliance framework
 
 #### **Community Engagement**
+
 - 📖 Complete documentation and tutorials
 - 🛠️ Multiple SDK languages supported
 - 💬 Developer community Discord/forum

@@ -63,8 +63,9 @@ info:
   description: Stripe for Bitcoin - Complete payment gateway using sBTC on Stacks blockchain
   version: 1.0.0
   contact:
-    name: sBTC Payment Gateway Team
-    url: https://github.com/your-username/sbtc-payment-gateway
+    name: Matt Glory
+    url: https://github.com/mattglory/sbtc-payment-gateway
+    email: mattglory14@gmail.com
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
@@ -1242,7 +1243,7 @@ const CheckoutForm = () => {
 ### Local Development
 ```bash
 # Clone and setup
-git clone https://github.com/your-username/sbtc-payment-gateway.git
+git clone https://github.com/mattglory/sbtc-payment-gateway.git
 cd sbtc-payment-gateway/backend
 npm install
 
@@ -1265,13 +1266,22 @@ npm run dev
 
 ## Support & Resources
 
-- **GitHub Repository**: https://github.com/your-username/sbtc-payment-gateway
+- **GitHub Repository**: https://github.com/mattglory/sbtc-payment-gateway
 - **Live Demo**: https://sbtcpaymentgateway-matt-glorys-projects.vercel.app
 - **API Health Check**: https://sbtc-payment-api-production.up.railway.app/health
 - **Stacks Documentation**: https://docs.stacks.co
 - **sBTC Resources**: https://sbtc.tech
 
-For technical support or integration assistance, please open an issue on GitHub or contact the development team.
+## Contact & Support
+
+For technical support or integration assistance:
+
+- **Developer**: Matt Glory
+- **Email**: mattglory14@gmail.com
+- **GitHub Issues**: https://github.com/mattglory/sbtc-payment-gateway/issues
+- **Location**: Birmingham, UK
+
+Please open an issue on GitHub for bugs and feature requests, or reach out via email for integration assistance.
 
 ---
 

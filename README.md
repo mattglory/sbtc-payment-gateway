@@ -221,6 +221,18 @@ This project is open source and welcomes contributions. Areas where help is need
 - Documentation improvements
 - Testing and bug fixes
 
+## Contact
+
+For questions, support, or collaboration:
+
+- **Developer**: Matt Glory
+- **Email**: mattglory14@gmail.com
+- **GitHub**: https://github.com/mattglory/sbtc-payment-gateway  
+- **Live Demo**: https://sbtcpaymentgateway-matt-glorys-projects.vercel.app
+- **Location**: Birmingham, UK
+
+Feel free to open an issue on GitHub or reach out via email for technical support or partnership inquiries.
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
