@@ -746,7 +746,7 @@ tags:
   "status": "healthy",
   "demoMode": "true",
   "apiKeysConfigured": 3,
-  "timestamp": "2025-01-20T10:30:00.000Z",
+  "timestamp": "2025-09-15T10:30:00.000Z",
   "network": "testnet",
   "contract": "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sbtc-payment-gateway",
   "apiKeySystem": {
@@ -800,7 +800,7 @@ tags:
 {
   "valid": true,
   "type": "demo_fallback",
-  "timestamp": "2025-01-20T10:30:00.000Z"
+  "timestamp": "2025-09-15T10:30:00.000Z"
 }
 ```
 
@@ -821,7 +821,7 @@ tags:
       "id": "pi_1234567890abcdef",
       "amount": 50000,
       "status": "succeeded",
-      "createdAt": "2025-01-20T09:30:00.000Z",
+      "createdAt": "2025-09-15T09:30:00.000Z",
       "customerAddress": "ST1CUSTOMER123",
       "description": "Digital product purchase"
     }
@@ -855,8 +855,8 @@ tags:
   "description": "Digital product purchase",
   "status": "requires_payment_method",
   "clientSecret": "pi_31130707-3d13-43e6-93ab-ec363b57315e_secret_724bc8c86617d496",
-  "createdAt": "2025-01-20T10:30:00.000Z",
-  "expiresAt": "2025-01-21T10:30:00.000Z",
+  "createdAt": "2025-09-15T10:30:00.000Z",
+  "expiresAt": "2025-09-16T10:30:00.000Z",
   "requestId": "06cb6510"
 }
 ```
@@ -875,12 +875,12 @@ tags:
   "currency": "BTC",
   "description": "Digital product purchase",
   "status": "succeeded",
-  "createdAt": "2025-01-20T10:30:00.000Z",
-  "expiresAt": "2025-01-21T10:30:00.000Z",
+  "createdAt": "2025-09-15T10:30:00.000Z",
+  "expiresAt": "2025-09-16T10:30:00.000Z",
   "customerAddress": "ST1CUSTOMER123ABC",
   "transactionId": "0x1234567890abcdef",
-  "processingStartedAt": "2025-01-20T10:32:00.000Z",
-  "succeededAt": "2025-01-20T10:32:03.000Z"
+  "processingStartedAt": "2025-09-15T10:32:00.000Z",
+  "succeededAt": "2025-09-15T10:32:03.000Z"
 }
 ```
 
@@ -1226,7 +1226,7 @@ const CheckoutForm = () => {
     "paymentId": "pi_1234567890",
     "amount": 50000,
     "merchantId": "merchant_123",
-    "timestamp": "2025-01-20T10:30:00.000Z"
+    "timestamp": "2025-09-15T10:30:00.000Z"
   }
 }
 ```
@@ -1279,7 +1279,7 @@ For technical support or integration assistance:
 - **Developer**: Matt Glory
 - **Email**: mattglory14@gmail.com
 - **GitHub Issues**: https://github.com/mattglory/sbtc-payment-gateway/issues
-- **Location**: Birmingham, UK
+- **Location**: United Kingdom
 
 Please open an issue on GitHub for bugs and feature requests, or reach out via email for integration assistance.
 

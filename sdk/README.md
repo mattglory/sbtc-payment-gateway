@@ -388,7 +388,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 - **Developer**: Matt Glory
 - **Email**: mattglory14@gmail.com
-- **Location**: Birmingham, UK
+- **Location**: United Kingdom
 - **Issues**: [GitHub Issues](https://github.com/mattglory/sbtc-payment-gateway/issues)
 - **Live Demo**: [Try it now](https://sbtcpaymentgateway-matt-glorys-projects.vercel.app)
 

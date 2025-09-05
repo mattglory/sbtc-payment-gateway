@@ -269,7 +269,7 @@ const payment = await sbtcpay.paymentIntents.create({
 
 ### Location & Presence
 
-- **Headquarters**: Birmingham, UK
+- **Headquarters**: United Kingdom
 - **Development**: Distributed team across US and Europe
 - **Legal**: Delaware C-Corp with proper governance structure
 
@@ -306,7 +306,7 @@ const payment = await sbtcpay.paymentIntents.create({
 
 ---
 
-_Last Updated: January 2024_  
+_Last Updated: September 2025_  
 _Version: 1.0_  
 _Contact: grants@sbtcpay.com_
 

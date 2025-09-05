@@ -98,7 +98,7 @@
 ## Market Opportunity
 
 ### Market Size
-- **Global Payment Processing**: $87.4B (2024)
+- **Global Payment Processing**: $87.4B (2025)
 - **Bitcoin Market Cap**: $1.2T+ 
 - **E-commerce Growth**: 15% YoY
 - **Developer Tools Market**: $26.9B
@@ -233,7 +233,7 @@ Content-Type: application/json
   "description": "Product purchase",
   "status": "requires_payment_method",
   "clientSecret": "pi_1234567890_secret_abc",
-  "created": "2024-01-15T10:30:00Z",
+  "created": "2025-09-15T10:30:00Z",
   "metadata": {
     "orderId": "order_123",
     "userId": "user_456"
@@ -284,7 +284,7 @@ Authorization: Bearer pk_test_your_api_key
       "id": "pi_recent_001",
       "amount": 75000,
       "status": "succeeded",
-      "created": "2024-01-15T09:45:00Z"
+      "created": "2025-09-15T09:45:00Z"
     }
   ]
 }
@@ -500,35 +500,35 @@ jobs:
 
 ## Roadmap
 
-### Q1 2024 - Foundation
+### Q1 2025 - Foundation
 - [x] Core API development
 - [x] Smart contract deployment
 - [x] Basic payment widget
 - [x] Merchant dashboard MVP
 - [ ] Security audit #1
 
-### Q2 2024 - Enhancement
+### Q2 2025 - Enhancement
 - [ ] Advanced analytics dashboard
 - [ ] Webhook system v2
 - [ ] Mobile-responsive widgets
 - [ ] API rate limiting improvements
 - [ ] PCI DSS Level 1 compliance
 
-### Q3 2024 - Scale
+### Q3 2025 - Scale
 - [ ] Multi-currency support
 - [ ] Subscription payments
 - [ ] Advanced fraud detection
 - [ ] Enterprise features
 - [ ] Mobile SDKs (iOS/Android)
 
-### Q4 2024 - Enterprise
+### Q4 2025 - Enterprise
 - [ ] White-label solutions
 - [ ] Advanced reporting
 - [ ] Global expansion
 - [ ] Partner integrations
 - [ ] Institutional features
 
-### 2025 - Innovation
+### 2026 - Innovation
 - [ ] Lightning Network integration
 - [ ] DeFi protocol integrations
 - [ ] AI-powered analytics

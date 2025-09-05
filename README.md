@@ -229,7 +229,7 @@ For questions, support, or collaboration:
 - **Email**: mattglory14@gmail.com
 - **GitHub**: https://github.com/mattglory/sbtc-payment-gateway  
 - **Live Demo**: https://sbtcpaymentgateway-matt-glorys-projects.vercel.app
-- **Location**: Birmingham, UK
+- **Location**: United Kingdom
 
 Feel free to open an issue on GitHub or reach out via email for technical support or partnership inquiries.
 
