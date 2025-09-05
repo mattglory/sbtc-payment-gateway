@@ -7,13 +7,10 @@ const express = require('express');
 const router = express.Router();
 
 const MerchantController = require('../controllers/merchantController');
-const MerchantService = require('../services/merchantService');
-const ApiKeyService = require('../services/apiKeyService');
+const { requireApiKey } = require('../middleware/auth');
 
-// Initialize services and controller
-const merchantService = new MerchantService();
-const apiKeyService = new ApiKeyService();
-const merchantController = new MerchantController(merchantService, apiKeyService);
+// Initialize controller
+const merchantController = new MerchantController();
 
 /**
  * @route POST /api/merchants/register
@@ -27,6 +24,13 @@ router.post('/register', (req, res) => merchantController.register(req, res));
  * @desc Get merchant dashboard statistics
  * @access Private (requires API key)
  */
-router.get('/dashboard', (req, res) => merchantController.getDashboard(req, res));
+router.get('/dashboard', requireApiKey, (req, res) => merchantController.getDashboard(req, res));
+
+/**
+ * @route POST /api/merchants/validate-key
+ * @desc Validate API key for debugging
+ * @access Public
+ */
+router.post('/validate-key', (req, res) => merchantController.validateKey(req, res));
 
 module.exports = router;

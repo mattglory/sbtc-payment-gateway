@@ -1,0 +1,68 @@
+{
+  "name": "@sbtc/payment-gateway-sdk",
+  "version": "1.0.0",
+  "description": "JavaScript SDK for sBTC Payment Gateway - Stripe for Bitcoin",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "build:watch": "rollup -c -w",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src --ext .js,.ts",
+    "lint:fix": "eslint src --ext .js,.ts --fix",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "bitcoin",
+    "stacks",
+    "sbtc",
+    "payment-gateway",
+    "payments",
+    "blockchain",
+    "sdk",
+    "javascript",
+    "typescript"
+  ],
+  "author": "sBTC Payment Gateway Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-username/sbtc-payment-gateway.git",
+    "directory": "sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/sbtc-payment-gateway/issues"
+  },
+  "homepage": "https://github.com/your-username/sbtc-payment-gateway/tree/main/sdk#readme",
+  "dependencies": {},
+  "peerDependencies": {
+    "react": ">=16.8.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/jest": "^29.0.0",
+    "@types/react": "^18.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^8.0.0",
+    "jest": "^29.0.0",
+    "react": "^18.0.0",
+    "rollup": "^3.0.0",
+    "rollup-plugin-typescript2": "^0.34.0",
+    "typescript": "^4.9.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

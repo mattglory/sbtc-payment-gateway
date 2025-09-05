@@ -1,12 +1,183 @@
 /**
  * Payment Service
- * Business logic for payment operations
+ * Business logic for payment operations with comprehensive payment intent handling
  */
+
+const crypto = require('crypto');
+const { v4: uuidv4 } = require('uuid');
 
 class PaymentService {
   constructor() {
     // In-memory storage (replace with database in production)
     this.payments = new Map();
+  }
+
+  /**
+   * Create payment intent with detailed validation and logging
+   */
+  async createPaymentIntent(merchantId, { amount, description, currency = 'BTC' }) {
+    const requestId = uuidv4().substring(0, 8);
+    const timestamp = new Date().toISOString();
+    
+    console.log(`[PAYMENT_INTENT:${requestId}] === REQUEST START === ${timestamp}`);
+    console.log(`[PAYMENT_INTENT:${requestId}] Merchant ID: ${merchantId}`);
+    console.log(`[PAYMENT_INTENT:${requestId}] Amount: ${amount}`);
+    console.log(`[PAYMENT_INTENT:${requestId}] Description: ${description || 'Not provided'}`);
+    console.log(`[PAYMENT_INTENT:${requestId}] Currency: ${currency}`);
+
+    // Enhanced validation with detailed logging
+    if (!amount) {
+      console.error(`[PAYMENT_INTENT:${requestId}] VALIDATION ERROR: Amount is missing`);
+      throw new Error('Amount is required');
+    }
+
+    if (typeof amount !== 'number') {
+      console.error(`[PAYMENT_INTENT:${requestId}] VALIDATION ERROR: Amount is not a number: ${typeof amount}`);
+      throw new Error('Amount must be a number');
+    }
+
+    if (amount <= 0) {
+      console.error(`[PAYMENT_INTENT:${requestId}] VALIDATION ERROR: Amount is not positive: ${amount}`);
+      throw new Error('Invalid amount. Must be greater than 0 satoshis.');
+    }
+
+    console.log(`[PAYMENT_INTENT:${requestId}] Validation passed`);
+
+    // Generate payment intent with detailed logging
+    const paymentId = `pi_${uuidv4()}`;
+    const intentId = uuidv4();
+    const amountInSats = Math.floor(amount);
+    const FEE_PERCENTAGE = 0.025; // 2.5% processing fee
+    const fee = Math.floor(amountInSats * FEE_PERCENTAGE);
+    
+    console.log(`[PAYMENT_INTENT:${requestId}] Generated Payment ID: ${paymentId}`);
+    console.log(`[PAYMENT_INTENT:${requestId}] Generated Intent ID: ${intentId}`);
+    console.log(`[PAYMENT_INTENT:${requestId}] Amount in Satoshis: ${amountInSats}`);
+    console.log(`[PAYMENT_INTENT:${requestId}] Calculated Fee: ${fee} (${FEE_PERCENTAGE * 100}%)`);
+
+    const paymentIntent = {
+      id: intentId,
+      paymentId,
+      merchantId,
+      amount: amountInSats,
+      fee,
+      currency,
+      description: description || 'Payment',
+      status: 'requires_payment_method',
+      clientSecret: `${paymentId}_secret_${crypto.randomBytes(16).toString('hex')}`,
+      createdAt: timestamp,
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
+      metadata: {
+        requestId
+      }
+    };
+
+    this.payments.set(intentId, paymentIntent);
+    console.log(`[PAYMENT_INTENT:${requestId}] Payment intent stored in memory`);
+    console.log(`[PAYMENT_INTENT:${requestId}] SUCCESS: Payment intent created successfully`);
+
+    return {
+      id: paymentIntent.id,
+      paymentId: paymentIntent.paymentId,
+      amount: paymentIntent.amount,
+      fee: paymentIntent.fee,
+      currency: paymentIntent.currency,
+      description: paymentIntent.description,
+      status: paymentIntent.status,
+      clientSecret: paymentIntent.clientSecret,
+      createdAt: paymentIntent.createdAt,
+      expiresAt: paymentIntent.expiresAt,
+      requestId
+    };
+  }
+
+  /**
+   * Confirm payment with blockchain processing simulation
+   */
+  async confirmPayment(paymentId, { customerAddress, transactionId }) {
+    const paymentIntent = this.payments.get(paymentId);
+    if (!paymentIntent) {
+      throw new Error('Payment intent not found');
+    }
+
+    // Check if payment has expired
+    if (new Date() > new Date(paymentIntent.expiresAt)) {
+      throw new Error('Payment intent has expired');
+    }
+
+    // Update payment status
+    paymentIntent.status = 'processing';
+    paymentIntent.customerAddress = customerAddress;
+    paymentIntent.transactionId = transactionId;
+    paymentIntent.processingStartedAt = new Date().toISOString();
+
+    console.log('Payment confirmation started:', {
+      paymentId: paymentIntent.paymentId,
+      customer: customerAddress,
+      txId: transactionId
+    });
+
+    // Simulate blockchain processing (in production, monitor the actual transaction)
+    setTimeout(() => {
+      try {
+        const updatedPayment = this.payments.get(paymentId);
+        if (updatedPayment && updatedPayment.status === 'processing') {
+          updatedPayment.status = 'succeeded';
+          updatedPayment.succeededAt = new Date().toISOString();
+
+          console.log('Payment succeeded:', {
+            paymentId: paymentIntent.paymentId,
+            amount: paymentIntent.amount,
+            customer: customerAddress
+          });
+        }
+      } catch (error) {
+        console.error('Payment processing error:', error);
+        const failedPayment = this.payments.get(paymentId);
+        if (failedPayment) {
+          failedPayment.status = 'payment_failed';
+          failedPayment.failedAt = new Date().toISOString();
+          failedPayment.failureReason = error.message;
+        }
+      }
+    }, 3000); // 3 second delay to simulate blockchain confirmation
+
+    return {
+      id: paymentIntent.id,
+      status: paymentIntent.status,
+      amount: paymentIntent.amount,
+      customer: customerAddress,
+      transactionId,
+      message: 'Payment is being processed on the Stacks blockchain'
+    };
+  }
+
+  /**
+   * Get detailed payment intent information
+   */
+  async getPaymentIntent(paymentId) {
+    const paymentIntent = this.payments.get(paymentId);
+    
+    if (!paymentIntent) {
+      throw new Error('Payment intent not found');
+    }
+
+    return {
+      id: paymentIntent.id,
+      paymentId: paymentIntent.paymentId,
+      amount: paymentIntent.amount,
+      fee: paymentIntent.fee,
+      currency: paymentIntent.currency,
+      description: paymentIntent.description,
+      status: paymentIntent.status,
+      createdAt: paymentIntent.createdAt,
+      expiresAt: paymentIntent.expiresAt,
+      customerAddress: paymentIntent.customerAddress,
+      transactionId: paymentIntent.transactionId,
+      processingStartedAt: paymentIntent.processingStartedAt,
+      succeededAt: paymentIntent.succeededAt,
+      failedAt: paymentIntent.failedAt
+    };
   }
 
   /**

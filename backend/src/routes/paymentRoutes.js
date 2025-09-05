@@ -7,22 +7,17 @@ const express = require('express');
 const router = express.Router();
 
 const PaymentController = require('../controllers/paymentController');
-const PaymentService = require('../services/paymentService');
-const MerchantService = require('../services/merchantService');
-const ApiKeyService = require('../services/apiKeyService');
+const { requireApiKey } = require('../middleware/auth');
 
-// Initialize services and controller
-const paymentService = new PaymentService();
-const merchantService = new MerchantService();
-const apiKeyService = new ApiKeyService();
-const paymentController = new PaymentController(paymentService, merchantService, apiKeyService);
+// Initialize controller
+const paymentController = new PaymentController();
 
 /**
  * @route POST /api/payment-intents
  * @desc Create a new payment intent
  * @access Private (requires API key)
  */
-router.post('/', (req, res) => paymentController.createIntent(req, res));
+router.post('/', requireApiKey, (req, res) => paymentController.createIntent(req, res));
 
 /**
  * @route GET /api/payment-intents/:id

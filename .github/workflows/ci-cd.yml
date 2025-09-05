@@ -1,0 +1,377 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '18'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Code Quality Checks
+  lint-and-format:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run ESLint
+        run: npm run lint
+        
+      - name: Check Prettier formatting
+        run: npm run format:check
+        
+      - name: Run type checking
+        run: npm run typecheck
+        if: success() || failure()
+
+  # Security Scanning
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate
+      
+      - name: Run Snyk security scan
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+
+  # Backend Tests
+  test-backend:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run backend unit tests
+        run: npm run test:backend:unit
+        working-directory: ./backend
+        
+      - name: Run backend integration tests
+        run: npm run test:backend:integration
+        working-directory: ./backend
+        env:
+          NODE_ENV: test
+      
+      - name: Generate coverage report
+        run: npm run test:coverage
+        working-directory: ./backend
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./backend/coverage/lcov.info
+          flags: backend
+          name: backend-coverage
+
+  # Frontend Tests
+  test-frontend:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run frontend tests
+        run: npm run test:frontend
+        working-directory: ./frontend
+      
+      - name: Build frontend
+        run: npm run build
+        working-directory: ./frontend
+        env:
+          CI: true
+      
+      - name: Upload frontend build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-build
+          path: frontend/build/
+
+  # Smart Contract Tests
+  test-contracts:
+    name: Smart Contract Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install Clarinet
+        run: |
+          wget https://github.com/hirosystems/clarinet/releases/latest/download/clarinet-linux-x64-glibc.tar.gz
+          tar -xzf clarinet-linux-x64-glibc.tar.gz
+          sudo mv clarinet /usr/local/bin/
+      
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ./contracts
+      
+      - name: Run contract tests
+        run: clarinet test
+        working-directory: ./contracts
+      
+      - name: Check contract syntax
+        run: clarinet check
+        working-directory: ./contracts
+
+  # Build Docker Images
+  build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [lint-and-format, test-backend, test-frontend, test-contracts]
+    if: github.event_name == 'push'
+    outputs:
+      image-digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+      
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Deploy to Staging
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.ref == 'refs/heads/develop'
+    environment:
+      name: staging
+      url: https://api-staging.sbtcpay.com
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy to staging
+        run: |
+          echo "Deploying to staging environment..."
+          # Add your staging deployment commands here
+          # Examples:
+          # - kubectl apply -f k8s/staging/
+          # - terraform apply -var-file=staging.tfvars
+          # - Railway deployment
+          # - Heroku deployment
+      
+      - name: Run smoke tests
+        run: |
+          # Wait for deployment to be ready
+          sleep 30
+          
+          # Run basic health checks
+          curl -f https://api-staging.sbtcpay.com/health || exit 1
+          
+          # Run smoke tests
+          npm run test:smoke -- --endpoint=https://api-staging.sbtcpay.com
+        continue-on-error: false
+
+  # Deploy to Production
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build, deploy-staging]
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://api.sbtcpay.com
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy to production
+        run: |
+          echo "Deploying to production environment..."
+          # Add your production deployment commands here
+          # Use blue-green or rolling deployments for zero downtime
+      
+      - name: Run production health checks
+        run: |
+          # Wait for deployment to be ready
+          sleep 60
+          
+          # Run comprehensive health checks
+          curl -f https://api.sbtcpay.com/health || exit 1
+          
+          # Check critical endpoints
+          curl -f https://api.sbtcpay.com/api/merchants/health || exit 1
+          curl -f https://api.sbtcpay.com/api/payment-intents/health || exit 1
+      
+      - name: Notify deployment success
+        if: success()
+        run: |
+          # Send success notification
+          echo "Production deployment successful!"
+          # Add Slack/Discord/email notifications here
+      
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "Production deployment failed, initiating rollback..."
+          # Add rollback commands here
+          # Notify team of failure
+
+  # Performance Testing
+  performance-test:
+    name: Performance Testing
+    runs-on: ubuntu-latest
+    needs: [deploy-staging]
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run performance tests
+        run: |
+          npm install -g artillery
+          artillery run tests/performance/load-test.yml --target=https://api-staging.sbtcpay.com
+        continue-on-error: true
+      
+      - name: Upload performance results
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-results
+          path: performance-results/
+
+  # Security Testing
+  security-test:
+    name: Security Testing
+    runs-on: ubuntu-latest
+    needs: [deploy-staging]
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run OWASP ZAP security scan
+        uses: zaproxy/action-full-scan@v0.7.0
+        with:
+          target: 'https://api-staging.sbtcpay.com'
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a'
+        continue-on-error: true
+      
+      - name: Upload ZAP results
+        uses: actions/upload-artifact@v3
+        with:
+          name: zap-security-report
+          path: report_html.html
+
+  # Cleanup
+  cleanup:
+    name: Cleanup
+    runs-on: ubuntu-latest
+    needs: [deploy-production, performance-test, security-test]
+    if: always()
+    steps:
+      - name: Clean up old images
+        run: |
+          # Clean up old container images to save space
+          echo "Cleaning up old container images..."
+          # Add cleanup commands here
+      
+      - name: Archive test results
+        run: |
+          # Archive test results for compliance
+          echo "Archiving test results..."
+          # Add archival commands here
+
+# Workflow dispatch for manual deployments
+  manual-deploy:
+    name: Manual Deployment
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Manual deployment
+        run: |
+          echo "Running manual deployment..."
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          # Add manual deployment logic here

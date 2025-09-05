@@ -1,100 +1,115 @@
 /**
  * Payment Controller
- * Handles payment intent operations
+ * Production-ready payment operations with comprehensive error handling and monitoring
  */
 
-const { v4: uuidv4 } = require('uuid');
-const crypto = require('crypto');
+const PaymentService = require('../services/paymentService');
+const MerchantService = require('../services/merchantService');
+const ApiKeyService = require('../services/apiKeyService');
+const logger = require('../utils/logger');
+const { Validator } = require('../utils/validation');
+const { ErrorFactory } = require('../utils/errors');
+const { performanceMonitor } = require('../utils/monitoring');
 
 class PaymentController {
-  constructor(paymentService, merchantService, apiKeyService) {
-    this.paymentService = paymentService;
-    this.merchantService = merchantService;
-    this.apiKeyService = apiKeyService;
+  constructor() {
+    this.paymentService = new PaymentService();
+    this.merchantService = new MerchantService();
+    this.apiKeyService = new ApiKeyService();
   }
 
   /**
-   * Create payment intent with Stacks integration
+   * Create payment intent with comprehensive validation, logging, and monitoring
    */
   async createIntent(req, res) {
+    const requestId = req.requestId || 'unknown';
+    
     try {
-      const apiKey = req.headers.authorization?.replace('Bearer ', '');
+      // Performance monitoring
+      performanceMonitor.start('payment_intent_creation');
       
-      if (!apiKey || !this.apiKeyService.validate(apiKey)) {
-        return res.status(401).json({
-          error: 'Invalid or missing API key'
-        });
+      // Log request details
+      logger.payment('create_intent_start', null, {
+        requestId,
+        ip: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+
+      // Validate input data
+      const validatedData = Validator.validatePaymentIntent(req.body);
+      
+      // Get merchant information from API key
+      const apiKey = req.apiKeyInfo?.key || req.headers.authorization?.replace('Bearer ', '');
+      const merchantId = this.apiKeyService.getMerchantFromApiKey(apiKey);
+      
+      if (!merchantId) {
+        throw ErrorFactory.authentication('Invalid API key or merchant not found');
       }
 
-      const merchantId = this.apiKeyService.getMerchantId(apiKey);
       const merchant = await this.merchantService.findById(merchantId);
-      
       if (!merchant) {
-        return res.status(404).json({
-          error: 'Merchant not found'
+        logger.warn('Merchant not found during payment creation', {
+          requestId,
+          merchantId,
+          apiKey: apiKey?.substring(0, 10) + '...'
         });
+        throw ErrorFactory.notFound('Merchant', merchantId);
       }
 
-      const { amount, description, currency = 'BTC' } = req.body;
-
-      // Validation
-      if (!amount || amount <= 0) {
-        return res.status(400).json({
-          error: 'Invalid amount. Must be greater than 0 satoshis.'
-        });
-      }
-
-      // Generate payment intent
-      const paymentId = `pi_${uuidv4()}`;
-      const intentId = uuidv4();
-      const amountInSats = Math.floor(amount);
-      const FEE_PERCENTAGE = 0.025; // 2.5% processing fee
-      const fee = Math.floor(amountInSats * FEE_PERCENTAGE);
-
-      const paymentIntent = {
-        id: intentId,
-        paymentId,
+      // Create payment intent
+      const result = await this.paymentService.createPaymentIntent(merchantId, validatedData);
+      
+      // Log successful creation
+      logger.payment('create_intent_success', result.id, {
+        requestId,
         merchantId,
-        amount: amountInSats,
-        fee,
-        currency,
-        description: description || 'Payment',
-        status: 'requires_payment_method',
-        clientSecret: `${paymentId}_secret_${crypto.randomBytes(16).toString('hex')}`,
-        createdAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
-        metadata: {
-          merchantAddress: merchant.stacksAddress,
-          contractFunction: 'create-payment-intent'
-        }
-      };
-
-      await this.paymentService.create(paymentIntent);
-
-      console.log('Payment intent created:', {
-        intentId,
-        paymentId,
-        amount: amountInSats,
-        merchant: merchant.businessName
+        amount: result.amount,
+        description: result.description
       });
 
-      res.status(201).json({
-        id: paymentIntent.id,
-        paymentId: paymentIntent.paymentId,
-        amount: paymentIntent.amount,
-        fee: paymentIntent.fee,
-        currency: paymentIntent.currency,
-        description: paymentIntent.description,
-        status: paymentIntent.status,
-        clientSecret: paymentIntent.clientSecret,
-        createdAt: paymentIntent.createdAt,
-        expiresAt: paymentIntent.expiresAt
-      });
+      // Record performance metrics
+      const performanceResult = performanceMonitor.end('payment_intent_creation');
+      if (performanceResult && performanceResult.duration > 1000) {
+        logger.performance('Slow payment intent creation', performanceResult.duration, {
+          requestId,
+          merchantId
+        });
+      }
+
+      res.status(201).json(result);
 
     } catch (error) {
-      console.error('Payment intent creation error:', error);
+      // End performance monitoring
+      performanceMonitor.end('payment_intent_creation');
+      
+      // Log error with context
+      logger.error('Payment intent creation failed', error, {
+        requestId,
+        body: req.body,
+        ip: req.ip
+      });
+
+      // Handle different error types
+      if (error.name === 'ValidationError') {
+        return res.status(400).json({
+          ...error.toJSON(),
+          requestId
+        });
+      }
+
+      if (error.statusCode) {
+        return res.status(error.statusCode).json({
+          ...error.toJSON(),
+          requestId
+        });
+      }
+
+      // Generic error response
+      const genericError = ErrorFactory.internal('Failed to create payment intent');
       res.status(500).json({
-        error: 'Failed to create payment intent'
+        ...genericError.toJSON(),
+        requestId,
+        ...(process.env.NODE_ENV === 'development' && { originalError: error.message })
       });
     }
   }
@@ -103,144 +118,237 @@ class PaymentController {
    * Confirm payment with Stacks blockchain integration
    */
   async confirmPayment(req, res) {
+    const requestId = req.requestId || 'unknown';
+    const { id } = req.params;
+    
     try {
-      const { id } = req.params;
-      const { customerAddress, transactionId } = req.body;
-
-      const paymentIntent = await this.paymentService.findById(id);
-      if (!paymentIntent) {
-        return res.status(404).json({
-          error: 'Payment intent not found'
-        });
-      }
-
-      // Check if payment has expired
-      if (new Date() > new Date(paymentIntent.expiresAt)) {
-        return res.status(400).json({
-          error: 'Payment intent has expired'
-        });
-      }
-
-      // Update payment status
-      const updatedPayment = {
-        ...paymentIntent,
-        status: 'processing',
-        customerAddress,
-        transactionId,
-        processingStartedAt: new Date().toISOString()
-      };
-
-      await this.paymentService.update(id, updatedPayment);
-
-      // Find merchant
-      const merchant = await this.merchantService.findById(paymentIntent.merchantId);
+      // Performance monitoring
+      performanceMonitor.start('payment_confirmation');
       
-      console.log('Payment confirmation started:', {
-        paymentId: paymentIntent.paymentId,
-        customer: customerAddress,
-        merchant: merchant?.businessName,
-        txId: transactionId
+      // Log request details
+      logger.payment('confirm_payment_start', id, {
+        requestId,
+        ip: req.ip,
+        userAgent: req.get('User-Agent')
       });
 
-      // Simulate blockchain processing (in production, monitor the actual transaction)
-      this.processPaymentAsync(id, paymentIntent);
+      // Validate payment ID
+      if (!id) {
+        throw ErrorFactory.validation('Payment ID is required');
+      }
 
-      res.json({
-        id: paymentIntent.id,
-        status: 'processing',
-        amount: paymentIntent.amount,
-        customer: customerAddress,
-        transactionId,
-        message: 'Payment is being processed on the Stacks blockchain'
+      // Validate confirmation data if present
+      let validatedData = {};
+      if (req.body && Object.keys(req.body).length > 0) {
+        validatedData = Validator.validatePaymentConfirmation(req.body);
+      }
+
+      // Confirm the payment
+      const result = await this.paymentService.confirmPayment(id, validatedData);
+      
+      // Update merchant stats asynchronously after successful payment processing
+      const paymentIntent = await this.paymentService.getPaymentIntent(id);
+      this.updateMerchantStatsAsync(paymentIntent);
+      
+      // Log successful confirmation
+      logger.payment('confirm_payment_success', id, {
+        requestId,
+        status: result.status,
+        amount: result.amount
       });
+
+      // Record performance metrics
+      const performanceResult = performanceMonitor.end('payment_confirmation');
+      if (performanceResult && performanceResult.duration > 2000) {
+        logger.performance('Slow payment confirmation', performanceResult.duration, {
+          requestId,
+          paymentId: id
+        });
+      }
+      
+      res.json(result);
 
     } catch (error) {
-      console.error('Payment confirmation error:', error);
+      // End performance monitoring
+      performanceMonitor.end('payment_confirmation');
+      
+      // Log error with context
+      logger.error('Payment confirmation failed', error, {
+        requestId,
+        paymentId: id,
+        body: req.body,
+        ip: req.ip
+      });
+
+      // Handle different error types
+      if (error.name === 'ValidationError') {
+        return res.status(400).json({
+          ...error.toJSON(),
+          requestId
+        });
+      }
+
+      if (error.statusCode) {
+        return res.status(error.statusCode).json({
+          ...error.toJSON(),
+          requestId
+        });
+      }
+
+      // Handle legacy error messages
+      if (error.message?.includes('not found')) {
+        const notFoundError = ErrorFactory.notFound('Payment', id);
+        return res.status(404).json({
+          ...notFoundError.toJSON(),
+          requestId
+        });
+      }
+      
+      if (error.message?.includes('expired')) {
+        const expiredError = ErrorFactory.validation('Payment has expired');
+        return res.status(400).json({
+          ...expiredError.toJSON(),
+          requestId
+        });
+      }
+      
+      // Generic error response
+      const genericError = ErrorFactory.internal('Failed to confirm payment');
       res.status(500).json({
-        error: 'Failed to confirm payment'
+        ...genericError.toJSON(),
+        requestId,
+        ...(process.env.NODE_ENV === 'development' && { originalError: error.message })
       });
     }
   }
 
   /**
-   * Get payment intent details
+   * Get payment intent details with comprehensive logging and error handling
    */
   async getPaymentIntent(req, res) {
+    const requestId = req.requestId || 'unknown';
+    const { id } = req.params;
+    
     try {
-      const { id } = req.params;
-      const paymentIntent = await this.paymentService.findById(id);
+      // Performance monitoring
+      performanceMonitor.start('get_payment_intent');
       
-      if (!paymentIntent) {
-        return res.status(404).json({
-          error: 'Payment intent not found'
+      // Log request details
+      logger.payment('get_payment_intent_start', id, {
+        requestId,
+        ip: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+
+      // Validate payment ID
+      if (!id) {
+        throw ErrorFactory.validation('Payment ID is required');
+      }
+
+      // Retrieve payment intent
+      const paymentIntent = await this.paymentService.getPaymentIntent(id);
+      
+      // Log successful retrieval
+      logger.payment('get_payment_intent_success', id, {
+        requestId,
+        status: paymentIntent.status,
+        merchantId: paymentIntent.merchantId
+      });
+
+      // Record performance metrics
+      const performanceResult = performanceMonitor.end('get_payment_intent');
+      if (performanceResult && performanceResult.duration > 500) {
+        logger.performance('Slow payment intent retrieval', performanceResult.duration, {
+          requestId,
+          paymentId: id
+        });
+      }
+      
+      res.json(paymentIntent);
+
+    } catch (error) {
+      // End performance monitoring
+      performanceMonitor.end('get_payment_intent');
+      
+      // Log error with context
+      logger.error('Payment intent retrieval failed', error, {
+        requestId,
+        paymentId: id,
+        ip: req.ip
+      });
+
+      // Handle different error types
+      if (error.name === 'ValidationError') {
+        return res.status(400).json({
+          ...error.toJSON(),
+          requestId
         });
       }
 
-      res.json({
-        id: paymentIntent.id,
-        paymentId: paymentIntent.paymentId,
-        amount: paymentIntent.amount,
-        fee: paymentIntent.fee,
-        currency: paymentIntent.currency,
-        description: paymentIntent.description,
-        status: paymentIntent.status,
-        createdAt: paymentIntent.createdAt,
-        expiresAt: paymentIntent.expiresAt,
-        customerAddress: paymentIntent.customerAddress,
-        transactionId: paymentIntent.transactionId,
-        processingStartedAt: paymentIntent.processingStartedAt,
-        succeededAt: paymentIntent.succeededAt,
-        failedAt: paymentIntent.failedAt
-      });
+      if (error.statusCode) {
+        return res.status(error.statusCode).json({
+          ...error.toJSON(),
+          requestId
+        });
+      }
 
-    } catch (error) {
-      console.error('Error retrieving payment intent:', error);
+      // Handle legacy error messages
+      if (error.message?.includes('not found')) {
+        const notFoundError = ErrorFactory.notFound('Payment intent', id);
+        return res.status(404).json({
+          ...notFoundError.toJSON(),
+          requestId
+        });
+      }
+      
+      // Generic error response
+      const genericError = ErrorFactory.internal('Failed to retrieve payment intent');
       res.status(500).json({
-        error: 'Failed to retrieve payment intent'
+        ...genericError.toJSON(),
+        requestId,
+        ...(process.env.NODE_ENV === 'development' && { originalError: error.message })
       });
     }
   }
 
   /**
-   * Process payment asynchronously
+   * Update merchant stats asynchronously after payment success
    */
-  async processPaymentAsync(paymentId, originalPayment) {
+  async updateMerchantStatsAsync(paymentIntent) {
+    // Wait for payment to succeed before updating stats
     setTimeout(async () => {
       try {
-        const payment = await this.paymentService.findById(paymentId);
-        if (payment && payment.status === 'processing') {
-          const succeededPayment = {
-            ...payment,
-            status: 'succeeded',
-            succeededAt: new Date().toISOString()
-          };
-          
-          await this.paymentService.update(paymentId, succeededPayment);
-          
-          // Update merchant stats
-          await this.merchantService.updateStats(payment.merchantId, {
-            totalProcessed: payment.amount,
-            feeCollected: payment.fee,
+        logger.info('Starting merchant stats update', {
+          paymentId: paymentIntent.id,
+          merchantId: paymentIntent.merchantId
+        });
+
+        const updatedPayment = await this.paymentService.getPaymentIntent(paymentIntent.id);
+        if (updatedPayment && updatedPayment.status === 'succeeded') {
+          await this.merchantService.updateStats(updatedPayment.merchantId, {
+            totalProcessed: updatedPayment.amount,
+            feeCollected: updatedPayment.fee,
             paymentsCount: 1
           });
 
-          console.log('Payment succeeded:', {
-            paymentId: payment.paymentId,
-            amount: payment.amount,
-            customer: payment.customerAddress
+          logger.merchant('stats_updated', updatedPayment.merchantId, {
+            paymentId: updatedPayment.paymentId,
+            amount: updatedPayment.amount,
+            fee: updatedPayment.fee
+          });
+        } else {
+          logger.warn('Payment not succeeded, skipping merchant stats update', {
+            paymentId: paymentIntent.id,
+            status: updatedPayment?.status
           });
         }
       } catch (error) {
-        console.error('Payment processing error:', error);
-        const failedPayment = {
-          ...originalPayment,
-          status: 'payment_failed',
-          failedAt: new Date().toISOString(),
-          failureReason: error.message
-        };
-        await this.paymentService.update(paymentId, failedPayment);
+        logger.error('Error updating merchant stats', error, {
+          paymentId: paymentIntent.id,
+          merchantId: paymentIntent.merchantId
+        });
       }
-    }, 3000); // 3 second delay to simulate blockchain confirmation
+    }, 4000); // Wait a bit after payment processing completes
   }
 }
 

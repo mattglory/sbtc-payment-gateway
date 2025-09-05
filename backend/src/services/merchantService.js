@@ -3,10 +3,92 @@
  * Business logic for merchant operations
  */
 
+const { v4: uuidv4 } = require('uuid');
+const ApiKeyService = require('./apiKeyService');
+
 class MerchantService {
   constructor() {
     // In-memory storage (replace with database in production)
     this.merchants = new Map();
+    this.apiKeyService = new ApiKeyService();
+    
+    // Create demo merchant for testing
+    this.createDemoMerchant();
+  }
+
+  /**
+   * Create demo merchant for testing
+   */
+  createDemoMerchant() {
+    const demoMerchant = {
+      id: 'demo-merchant-id',
+      businessName: 'Demo Store',
+      email: 'demo@example.com',
+      stacksAddress: 'ST1DEMO123ABC',
+      apiKey: 'pk_test_demo_key',
+      secretKey: 'sk_test_demo_secret',
+      isActive: true,
+      totalProcessed: 0,
+      feeCollected: 0,
+      paymentsCount: 0,
+      registeredAt: new Date().toISOString()
+    };
+    
+    this.merchants.set('demo-merchant-id', demoMerchant);
+    
+    if (this.apiKeyService.DEMO_MODE) {
+      console.log(`[DEMO] Demo merchant created with keys: ${this.apiKeyService.DEMO_KEYS.join(', ')}`);
+    }
+  }
+
+  /**
+   * Register a new merchant
+   */
+  async register(merchantData) {
+    const { businessName, email, stacksAddress } = merchantData;
+
+    // Validation
+    if (!businessName || !email || !stacksAddress) {
+      throw new Error('Missing required fields: businessName, email, stacksAddress');
+    }
+
+    // Check if merchant already exists
+    if (this.merchants.has(stacksAddress)) {
+      throw new Error('Merchant already registered with this Stacks address');
+    }
+
+    // Generate API credentials
+    const apiKey = this.apiKeyService.generateApiKey();
+    const secretKey = this.apiKeyService.generateSecretKey();
+    const merchantId = uuidv4();
+
+    // Store merchant data
+    const newMerchant = {
+      id: merchantId,
+      businessName,
+      email,
+      stacksAddress,
+      apiKey,
+      secretKey,
+      isActive: true,
+      totalProcessed: 0,
+      feeCollected: 0,
+      paymentsCount: 0,
+      registeredAt: new Date().toISOString()
+    };
+
+    this.merchants.set(stacksAddress, newMerchant);
+    await this.apiKeyService.store(apiKey, merchantId);
+
+    console.log(`[MERCHANT] Registered: ${businessName} (${merchantId})`);
+    console.log(`[API_KEY] Generated key for merchant: ${apiKey.substring(0, 12)}...`);
+
+    return {
+      merchantId,
+      apiKey,
+      secretKey,
+      message: 'Merchant registered successfully. Please call register-merchant on the smart contract to complete setup.'
+    };
   }
 
   /**

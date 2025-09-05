@@ -1,111 +1,292 @@
 /**
  * Merchant Controller
- * Handles merchant-related operations
+ * Production-ready merchant operations with comprehensive error handling and monitoring
  */
 
-const { v4: uuidv4 } = require('uuid');
-// const crypto = require('crypto'); // Reserved for future use
+const MerchantService = require('../services/merchantService');
+const ApiKeyService = require('../services/apiKeyService');
+const logger = require('../utils/logger');
+const { Validator } = require('../utils/validation');
+const { ErrorFactory } = require('../utils/errors');
+const { performanceMonitor } = require('../utils/monitoring');
 
 class MerchantController {
-  constructor(merchantService, apiKeyService) {
-    this.merchantService = merchantService;
-    this.apiKeyService = apiKeyService;
+  constructor() {
+    this.merchantService = new MerchantService();
+    this.apiKeyService = new ApiKeyService();
   }
 
   /**
-   * Register a new merchant
+   * Register a new merchant with comprehensive validation and monitoring
    */
   async register(req, res) {
+    const requestId = req.requestId || 'unknown';
+    
     try {
-      const { businessName, email, stacksAddress } = req.body;
+      // Performance monitoring
+      performanceMonitor.start('merchant_registration');
+      
+      // Log request details
+      logger.merchant('register_start', null, {
+        requestId,
+        ip: req.ip,
+        userAgent: req.get('User-Agent'),
+        email: req.body?.email
+      });
 
-      // Validation
-      if (!businessName || !email || !stacksAddress) {
-        return res.status(400).json({
-          error: 'Missing required fields: businessName, email, stacksAddress'
+      // Validate input data
+      const validatedData = Validator.validateMerchantRegistration(req.body);
+      
+      // Register the merchant
+      const result = await this.merchantService.register(validatedData);
+      
+      // Log successful registration
+      logger.merchant('register_success', result.merchantId, {
+        requestId,
+        email: result.email,
+        businessName: result.businessName
+      });
+
+      // Record performance metrics
+      const performanceResult = performanceMonitor.end('merchant_registration');
+      if (performanceResult && performanceResult.duration > 2000) {
+        logger.performance('Slow merchant registration', performanceResult.duration, {
+          requestId,
+          merchantId: result.merchantId
         });
       }
 
-      // Check if merchant already exists
-      if (await this.merchantService.existsByAddress(stacksAddress)) {
-        return res.status(409).json({
-          error: 'Merchant already registered with this Stacks address'
-        });
-      }
-
-      // Generate API credentials
-      const apiKey = this.apiKeyService.generateApiKey();
-      const secretKey = this.apiKeyService.generateSecretKey();
-      const merchantId = uuidv4();
-
-      // Create merchant
-      const merchantData = {
-        id: merchantId,
-        businessName,
-        email,
-        stacksAddress,
-        apiKey,
-        secretKey,
-        isActive: true,
-        totalProcessed: 0,
-        feeCollected: 0,
-        paymentsCount: 0,
-        registeredAt: new Date().toISOString()
-      };
-
-      await this.merchantService.create(merchantData);
-      await this.apiKeyService.store(apiKey, merchantId);
-
-      console.log('Merchant registered:', {
-        merchantId,
-        businessName,
-        stacksAddress
-      });
-
-      res.status(201).json({
-        merchantId,
-        apiKey,
-        secretKey,
-        message: 'Merchant registered successfully. Please call register-merchant on the smart contract to complete setup.'
-      });
+      res.status(201).json(result);
 
     } catch (error) {
-      console.error('Merchant registration error:', error);
+      // End performance monitoring
+      performanceMonitor.end('merchant_registration');
+      
+      // Log error with context
+      logger.error('Merchant registration failed', error, {
+        requestId,
+        body: req.body,
+        ip: req.ip
+      });
+
+      // Handle different error types
+      if (error.name === 'ValidationError') {
+        return res.status(400).json({
+          ...error.toJSON(),
+          requestId
+        });
+      }
+
+      if (error.statusCode) {
+        return res.status(error.statusCode).json({
+          ...error.toJSON(),
+          requestId
+        });
+      }
+
+      // Handle legacy error messages
+      if (error.message?.includes('Missing required fields')) {
+        const validationError = ErrorFactory.validation('Missing required fields for merchant registration');
+        return res.status(400).json({
+          ...validationError.toJSON(),
+          requestId
+        });
+      }
+      
+      if (error.message?.includes('already registered')) {
+        const conflictError = ErrorFactory.conflict('Merchant with this email is already registered');
+        return res.status(409).json({
+          ...conflictError.toJSON(),
+          requestId
+        });
+      }
+      
+      // Generic error response
+      const genericError = ErrorFactory.internal('Failed to register merchant');
       res.status(500).json({
-        error: 'Internal server error during merchant registration'
+        ...genericError.toJSON(),
+        requestId,
+        ...(process.env.NODE_ENV === 'development' && { originalError: error.message })
       });
     }
   }
 
   /**
-   * Get merchant dashboard statistics
+   * Get merchant dashboard statistics with comprehensive authentication and monitoring
    */
   async getDashboard(req, res) {
+    const requestId = req.requestId || 'unknown';
+    
     try {
-      const apiKey = req.headers.authorization?.replace('Bearer ', '');
+      // Performance monitoring
+      performanceMonitor.start('dashboard_stats');
       
-      if (!apiKey || !this.apiKeyService.validate(apiKey)) {
-        return res.status(401).json({
-          error: 'Invalid or missing API key'
-        });
+      // Get merchant information from API key
+      const apiKey = req.apiKeyInfo?.key || req.headers.authorization?.replace('Bearer ', '');
+      const merchantId = this.apiKeyService.getMerchantFromApiKey(apiKey);
+      
+      if (!merchantId) {
+        throw ErrorFactory.authentication('Invalid API key or merchant not found');
       }
 
-      const merchantId = this.apiKeyService.getMerchantId(apiKey);
-      const merchant = await this.merchantService.findById(merchantId);
+      // Log request details
+      logger.merchant('dashboard_start', merchantId, {
+        requestId,
+        ip: req.ip,
+        userAgent: req.get('User-Agent')
+      });
       
-      if (!merchant) {
-        return res.status(404).json({
-          error: 'Merchant not found'
-        });
-      }
-
+      // Get dashboard statistics
       const stats = await this.merchantService.getDashboardStats(merchantId);
+      
+      // Log successful retrieval
+      logger.merchant('dashboard_success', merchantId, {
+        requestId,
+        totalPayments: stats.totalPayments,
+        totalRevenue: stats.totalRevenue
+      });
+
+      // Record performance metrics
+      const performanceResult = performanceMonitor.end('dashboard_stats');
+      if (performanceResult && performanceResult.duration > 1000) {
+        logger.performance('Slow dashboard stats retrieval', performanceResult.duration, {
+          requestId,
+          merchantId
+        });
+      }
+
       res.json(stats);
 
     } catch (error) {
-      console.error('Dashboard stats error:', error);
+      // End performance monitoring
+      performanceMonitor.end('dashboard_stats');
+      
+      // Log error with context
+      logger.error('Dashboard stats retrieval failed', error, {
+        requestId,
+        ip: req.ip,
+        apiKeyPrefix: req.headers.authorization?.substring(0, 20) + '...'
+      });
+
+      // Handle different error types
+      if (error.statusCode) {
+        return res.status(error.statusCode).json({
+          ...error.toJSON(),
+          requestId
+        });
+      }
+      
+      // Generic error response
+      const genericError = ErrorFactory.internal('Failed to retrieve dashboard statistics');
       res.status(500).json({
-        error: 'Failed to retrieve dashboard statistics'
+        ...genericError.toJSON(),
+        requestId,
+        ...(process.env.NODE_ENV === 'development' && { originalError: error.message })
+      });
+    }
+  }
+
+  /**
+   * Validate API key endpoint for debugging with comprehensive logging
+   */
+  async validateKey(req, res) {
+    const requestId = req.requestId || 'unknown';
+    
+    try {
+      // Performance monitoring
+      performanceMonitor.start('api_key_validation');
+      
+      // Log request details
+      logger.info('API key validation request', {
+        requestId,
+        ip: req.ip,
+        userAgent: req.get('User-Agent'),
+        hasApiKey: !!req.body?.apiKey
+      });
+
+      // Validate input
+      const { apiKey } = req.body;
+      if (!apiKey) {
+        throw ErrorFactory.validation('API key is required in request body');
+      }
+
+      // Validate the API key
+      const validation = this.apiKeyService.validateApiKey(apiKey);
+      
+      const response = {
+        valid: validation.valid,
+        type: validation.type,
+        timestamp: new Date().toISOString(),
+        requestId
+      };
+      
+      if (!validation.valid) {
+        response.error = validation.error;
+        response.code = validation.code;
+        response.hint = validation.code === 'MISSING_API_KEY' 
+          ? 'Provide an API key to validate'
+          : this.apiKeyService.DEMO_MODE 
+            ? `Try one of the demo keys: ${this.apiKeyService.DEMO_KEYS.join(', ')}` 
+            : 'Contact support for a valid API key';
+
+        // Log validation failure
+        logger.warn('API key validation failed', {
+          requestId,
+          error: validation.error,
+          code: validation.code,
+          apiKeyPrefix: apiKey?.substring(0, 10) + '...'
+        });
+      } else {
+        // Log successful validation
+        logger.info('API key validation successful', {
+          requestId,
+          type: validation.type,
+          apiKeyPrefix: apiKey?.substring(0, 10) + '...'
+        });
+      }
+
+      // Record performance metrics
+      const performanceResult = performanceMonitor.end('api_key_validation');
+      if (performanceResult && performanceResult.duration > 100) {
+        logger.performance('Slow API key validation', performanceResult.duration, {
+          requestId
+        });
+      }
+      
+      res.json(response);
+
+    } catch (error) {
+      // End performance monitoring
+      performanceMonitor.end('api_key_validation');
+      
+      // Log error with context
+      logger.error('API key validation error', error, {
+        requestId,
+        body: req.body,
+        ip: req.ip
+      });
+
+      // Handle different error types
+      if (error.name === 'ValidationError') {
+        return res.status(400).json({
+          ...error.toJSON(),
+          requestId
+        });
+      }
+
+      if (error.statusCode) {
+        return res.status(error.statusCode).json({
+          ...error.toJSON(),
+          requestId
+        });
+      }
+      
+      // Generic error response
+      const genericError = ErrorFactory.internal('Failed to validate API key');
+      res.status(500).json({
+        ...genericError.toJSON(),
+        requestId,
+        ...(process.env.NODE_ENV === 'development' && { originalError: error.message })
       });
     }
   }

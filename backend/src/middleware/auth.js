@@ -1,13 +1,41 @@
 /**
  * Authentication Middleware
- * Handles API key validation and authentication
+ * Handles API key validation and authentication with enhanced error handling
  */
 
 const ApiKeyService = require('../services/apiKeyService');
 const apiKeyService = new ApiKeyService();
 
 /**
- * Validate API key middleware
+ * API Key validation middleware with comprehensive error handling
+ */
+const requireApiKey = (req, res, next) => {
+  const apiKey = req.headers.authorization?.replace('Bearer ', '');
+  const validation = apiKeyService.validateApiKey(apiKey);
+  
+  if (!validation.valid) {
+    const errorResponse = {
+      error: validation.error,
+      code: validation.code,
+      hint: validation.code === 'MISSING_API_KEY' 
+        ? 'Include your API key in the Authorization header as "Bearer your_api_key"'
+        : apiKeyService.DEMO_MODE 
+          ? `Try one of the demo keys: ${apiKeyService.DEMO_KEYS.join(', ')}` 
+          : 'Contact support for a valid API key'
+    };
+    
+    console.log(`[API_KEY] Request rejected from ${req.ip}: ${validation.error}`);
+    return res.status(401).json(errorResponse);
+  }
+
+  // Add validation info to request for debugging
+  req.apiKeyInfo = validation;
+  console.log(`[API_KEY] Request authorized with ${validation.type} key from ${req.ip}`);
+  next();
+};
+
+/**
+ * Legacy validate API key middleware (for backward compatibility)
  */
 const validateApiKey = (req, res, next) => {
   try {
@@ -93,6 +121,8 @@ const rateLimit = (windowMs = 15 * 60 * 1000, max = 100) => {
 
 module.exports = {
   validateApiKey,
+  requireApiKey,
   optionalApiKey,
-  rateLimit
+  rateLimit,
+  apiKeyService
 };
