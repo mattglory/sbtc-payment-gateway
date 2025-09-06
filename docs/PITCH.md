@@ -193,7 +193,7 @@ const payment = await sbtcpay.paymentIntents.create({
 
 - **Marketing**: Developer community engagement and content
 - **Partnerships**: E-commerce platform integrations
-- **Support**: Dedicated merchant success team
+- **Support**: Customer success and community management
 - **Milestone**: Process $25M in transactions, onboard 1,000 merchants
 
 #### **Phase 3: Scale ($1M+ - 18 months)**
@@ -234,7 +234,7 @@ const payment = await sbtcpay.paymentIntents.create({
 
 - **Technical Excellence**: Production-ready codebase with 75%+ test coverage
 - **Business Traction**: $2.5M+ processed, 100+ merchants in pipeline
-- **Team Experience**: Payment industry veterans with 15+ years experience
+- **Solo Execution**: Demonstrated ability to build and deploy production-ready systems independently
 - **Community Support**: Active developer engagement and positive feedback
 
 ### Competitive Advantages
@@ -270,7 +270,7 @@ const payment = await sbtcpay.paymentIntents.create({
 ### Location & Presence
 
 - **Headquarters**: United Kingdom
-- **Development**: Distributed team across US and Europe
+- **Development**: Solo developer with global community support
 - **Legal**: Delaware C-Corp with proper governance structure
 
 ---

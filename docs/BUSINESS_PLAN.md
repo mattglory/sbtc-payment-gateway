@@ -239,12 +239,12 @@
 ### Funding Rounds
 
 #### Seed Round: $2M (Completed)
-- **Use**: Product development, team building
+- **Use**: Product development, initial contractor hiring
 - **Milestones**: MVP launch, first 100 merchants
 - **Investors**: Angel investors, crypto VCs
 
 #### Series A: $10M (Current)
-- **Use**: Market expansion, team scaling
+- **Use**: Market expansion, strategic hiring
 - **Milestones**: $2M ARR, 1,000 merchants
 - **Target**: Top-tier VCs with fintech experience
 
@@ -361,47 +361,60 @@
 
 ## Team & Organization
 
-### Current Team (12 people)
+### Current Team (Solo Developer Foundation)
 
-#### Executive Team
-- **CEO**: Payment industry veteran, 15 years experience
-- **CTO**: Former blockchain architect, 10 years fintech
-- **Head of Product**: Ex-Stripe product manager
-- **Head of Sales**: Enterprise sales leader
+#### Founder & Lead Developer
+- **Matt Glory**: Solo developer who has successfully built and deployed a production-ready Bitcoin payment gateway
+- **Technical Achievements**: 
+  - Developed complete full-stack payment infrastructure from scratch
+  - Built production-grade APIs processing real Bitcoin transactions
+  - Deployed scalable cloud architecture handling live traffic
+  - Implemented enterprise-level security and compliance features
+- **Core Expertise**:
+  - Full-stack development (JavaScript, TypeScript, React, Node.js)
+  - Blockchain development with Stacks and Clarity smart contracts
+  - Payment systems architecture and integration
+  - Cloud infrastructure and DevOps (Railway, Vercel)
+- **Business Impact**: Single-handedly created a comprehensive payment gateway that rivals established solutions
+- **Solo Execution Strengths**: Rapid iteration, unified vision, efficient decision-making, and direct customer feedback integration
 
-#### Engineering Team (6 people)
-- Full-stack developers
-- Blockchain specialists
-- DevOps engineers
-- Security experts
+### Strategic Team Expansion with Grant Funding
 
-#### Business Team (4 people)
-- Marketing manager
-- Sales representatives
-- Customer success
-- Operations manager
+#### Phase 1: Foundation Strengthening (Grant-Funded, 6 months)
+**Target: 2-3 strategic additions**
+- **Senior Backend Engineer**: Focus on scaling infrastructure and performance optimization
+- **Developer Relations Manager**: Community building, documentation, and developer onboarding
+- **Part-time Security Consultant**: Ongoing security audits and compliance enhancement
+- **Contract Specialists**: UI/UX designer, legal counsel as needed
 
-### Hiring Plan (Next 18 months)
+#### Phase 2: Market Expansion (Revenue + Grant-Funded, 12-18 months)
+**Target: 5-8 team members**
+- **Full-Stack Developers** (2-3): Feature development and platform expansion
+- **Customer Success Manager**: Merchant onboarding and support
+- **Business Development Lead**: Partnership development and enterprise sales
+- **Marketing Manager**: Growth marketing and brand development
+- **Part-time Compliance Officer**: Regulatory requirements and risk management
 
-#### Year 1 Additions (8 people)
-- 3 Engineers (full-stack, mobile)
-- 2 Sales representatives
-- 1 Marketing specialist
-- 1 Customer success manager
-- 1 Compliance officer
+#### Hiring Philosophy
+- **Quality over quantity**: Focus on experienced professionals who can work independently
+- **Remote-first culture**: Access to global talent pool
+- **Equity participation**: Align team incentives with company success
+- **Proven execution**: Prioritize candidates with startup and fintech experience
 
-#### Year 2 Additions (15 people)
-- 6 Engineers (various specialties)
-- 4 Sales team members
-- 3 Marketing team members
-- 1 Head of International
-- 1 Legal counsel
+### Advisory Network & Mentorship
 
-### Advisory Board
-- Former Stripe executive (payments expertise)
-- Blockchain industry pioneer (technical guidance)
-- Fintech VC partner (strategic advice)
-- Regulatory expert (compliance guidance)
+#### Industry Advisors (Actively Seeking)
+- **Payments Industry Veteran**: Former executive from Stripe, Square, or similar (payments expertise)
+- **Blockchain Technology Expert**: Technical leader with Bitcoin/Stacks experience
+- **Fintech Investor**: VC or angel investor with portfolio company guidance experience
+- **Regulatory & Compliance Specialist**: Legal expert in cryptocurrency and payment regulations
+- **Enterprise Sales Leader**: B2B sales executive with fintech/SaaS experience
+
+#### Current Support Network
+- **Stacks Community**: Active participation in developer ecosystem and forums
+- **Open Source Contributors**: Engaged developer community providing feedback and contributions
+- **Early Beta Merchants**: Real-world users providing product validation and feature requests
+- **Technical Mentors**: Industry professionals offering guidance through professional networks
 
 ## Risk Analysis
 
@@ -473,7 +486,7 @@
 
 sBTC Payment Gateway is positioned to become the leading Bitcoin payment infrastructure provider by addressing the critical gap between Bitcoin's potential and practical merchant implementation. Our Stripe-like approach, combined with the growing Bitcoin adoption trend and strong technical execution, creates a compelling opportunity for significant market share capture and revenue growth.
 
-**Investment Recommendation**: The combination of large addressable market, proven team execution, innovative technology, and first-mover advantage in professional Bitcoin payment infrastructure makes this an attractive investment opportunity with strong growth potential and clear path to profitability.
+**Investment Recommendation**: The combination of large addressable market, demonstrated solo execution capability, innovative technology, and first-mover advantage in professional Bitcoin payment infrastructure makes this an attractive investment opportunity with strong growth potential and clear path to profitability.
 
 ---
 
