@@ -34,8 +34,24 @@ class ApiKeyService {
    * Store API key mapping
    */
   async store(apiKey, merchantId) {
-    this.apiKeys.set(apiKey, merchantId);
-    return true;
+    try {
+      // Input validation
+      if (!apiKey || typeof apiKey !== 'string') {
+        throw new Error('Valid API key is required');
+      }
+      
+      if (!merchantId || typeof merchantId !== 'string') {
+        throw new Error('Valid merchant ID is required');
+      }
+
+      this.apiKeys.set(apiKey, merchantId);
+      
+      console.log(`[API_KEY] Stored API key mapping: ${apiKey.substring(0, 12)}... -> ${merchantId}`);
+      return true;
+    } catch (error) {
+      console.error('[API_KEY] Failed to store API key mapping:', error.message);
+      throw error;
+    }
   }
 
   /**
@@ -97,9 +113,12 @@ class ApiKeyService {
       return 'demo-merchant-id';
     }
 
-    // For configured keys, also return demo merchant (in production you'd map these properly)
+    // For configured keys, generate merchant ID based on API key
     if (validation.type === 'configured') {
-      return 'demo-merchant-id'; // TODO: Implement proper merchant mapping for configured keys
+      // Generate consistent merchant ID from API key hash
+      const crypto = require('crypto');
+      const hash = crypto.createHash('sha256').update(apiKey).digest('hex');
+      return `merchant-${hash.substring(0, 12)}`;
     }
 
     // For registered keys, use the mapping
@@ -130,7 +149,26 @@ class ApiKeyService {
    * Revoke API key
    */
   async revoke(apiKey) {
-    return this.apiKeys.delete(apiKey);
+    try {
+      // Input validation
+      if (!apiKey || typeof apiKey !== 'string') {
+        throw new Error('Valid API key is required');
+      }
+
+      const existed = this.apiKeys.has(apiKey);
+      const deleted = this.apiKeys.delete(apiKey);
+      
+      if (deleted && existed) {
+        console.log(`[API_KEY] Revoked API key: ${apiKey.substring(0, 12)}...`);
+      } else {
+        console.log(`[API_KEY] API key not found for revocation: ${apiKey.substring(0, 12)}...`);
+      }
+      
+      return deleted;
+    } catch (error) {
+      console.error('[API_KEY] Failed to revoke API key:', error.message);
+      throw error;
+    }
   }
 
   /**
@@ -155,23 +193,40 @@ class ApiKeyService {
    * Regenerate API key for a merchant
    */
   async regenerate(oldApiKey) {
-    const merchantId = this.getMerchantId(oldApiKey);
-    if (!merchantId) {
-      throw new Error('API key not found');
-    }
+    try {
+      // Input validation
+      if (!oldApiKey || typeof oldApiKey !== 'string') {
+        throw new Error('Valid API key is required');
+      }
 
-    // Remove old key
-    this.apiKeys.delete(oldApiKey);
-    
-    // Generate new key
-    const newApiKey = this.generateApiKey();
-    this.apiKeys.set(newApiKey, merchantId);
-    
-    return {
-      oldApiKey,
-      newApiKey,
-      merchantId
-    };
+      const merchantId = this.getMerchantId(oldApiKey);
+      if (!merchantId) {
+        throw new Error('API key not found or invalid');
+      }
+
+      // Remove old key
+      const deleted = this.apiKeys.delete(oldApiKey);
+      if (!deleted) {
+        throw new Error('Failed to remove old API key');
+      }
+      
+      // Generate new key
+      const newApiKey = this.generateApiKey();
+      this.apiKeys.set(newApiKey, merchantId);
+      
+      console.log(`[API_KEY] Regenerated API key for merchant: ${merchantId}`);
+      console.log(`[API_KEY] Old key: ${oldApiKey.substring(0, 12)}...`);
+      console.log(`[API_KEY] New key: ${newApiKey.substring(0, 12)}...`);
+      
+      return {
+        oldApiKey,
+        newApiKey,
+        merchantId
+      };
+    } catch (error) {
+      console.error('[API_KEY] Failed to regenerate API key:', error.message);
+      throw error;
+    }
   }
 
   /**

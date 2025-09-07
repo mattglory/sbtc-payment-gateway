@@ -5,7 +5,6 @@
 
 const os = require('os');
 const fs = require('fs').promises;
-const path = require('path');
 const { performance } = require('perf_hooks');
 const logger = require('./logger');
 
@@ -277,7 +276,7 @@ const createDefaultHealthChecks = (healthManager) => {
   // Disk space check
   healthManager.register('disk', async () => {
     try {
-      const stats = await fs.stat(process.cwd());
+      await fs.stat(process.cwd());
       // This is a basic check - in production, use proper disk space monitoring
       return { available: true, path: process.cwd() };
     } catch (error) {

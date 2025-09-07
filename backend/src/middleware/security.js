@@ -7,7 +7,7 @@ const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const logger = require('../utils/logger');
-const { AuthenticationError, AuthorizationError, RateLimitError } = require('../utils/errors');
+const { AuthenticationError, AuthorizationError } = require('../utils/errors');
 
 /**
  * Generate request ID middleware
@@ -24,15 +24,15 @@ const requestId = (req, res, next) => {
 const securityHeaders = helmet({
   contentSecurityPolicy: {
     directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"],
-      fontSrc: ["'self'"],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"]
+      defaultSrc: ['\'self\''],
+      scriptSrc: ['\'self\''],
+      styleSrc: ['\'self\'', '\'unsafe-inline\''],
+      imgSrc: ['\'self\'', 'data:', 'https:'],
+      connectSrc: ['\'self\''],
+      fontSrc: ['\'self\''],
+      objectSrc: ['\'none\''],
+      mediaSrc: ['\'self\''],
+      frameSrc: ['\'none\'']
     }
   },
   crossOriginEmbedderPolicy: false, // Allow embedding for payment widgets
@@ -315,10 +315,10 @@ const verifyWebhookSignature = (secret) => {
  */
 const preventSqlInjection = (req, res, next) => {
   const sqlPatterns = [
-    /(\%27)|(\')|(\-\-)|(\%23)|(#)/i,
-    /((\%3D)|(=))[^\n]*((\%27)|(\')|(\-\-)|(\%3B)|(;))/i,
-    /\w*((\%27)|(\'))((\%6F)|o|(\%4F))((\%72)|r|(\%52))/i,
-    /((\%27)|(\'))union/i,
+    /(%27)|(')|(--)|(%23)|(#)/i,
+    /((%3D)|(=))[^\n]*((%27)|(')|(--)|(%3B)|(;))/i,
+    /\w*((%27)|(')){1}((%6F)|o|(%4F))((%72)|r|(%52))/i,
+    /((%27)|(')){1}union/i,
     /exec(\s|\+)+(s|x)p\w+/i
   ];
   

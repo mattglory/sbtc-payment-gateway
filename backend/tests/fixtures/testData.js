@@ -317,7 +317,7 @@ const edgeCases = {
     veryLong: 'A'.repeat(10000),
     unicode: 'Café & Restaurant "Le Spécial" - München 🚀💰',
     specialChars: '!@#$%^&*()_+-=[]{}|;:,.<>?',
-    sqlInjection: "'; DROP TABLE payments; --",
+    sqlInjection: '\'; DROP TABLE payments; --',
     xss: '<script>alert("xss")</script>'
   },
   addresses: {

@@ -23,7 +23,6 @@ const {
   requestId,
   securityHeaders,
   createRateLimit,
-  authenticateApiKey,
   sanitizeInput,
   corsOptions,
   requestLogger,
@@ -33,8 +32,7 @@ const {
 
 const { 
   metricsCollector, 
-  healthCheckManager, 
-  performanceMonitor: perfMonitor 
+  healthCheckManager
 } = require('./utils/monitoring');
 
 // Legacy auth middleware (for backward compatibility)
@@ -103,7 +101,7 @@ app.use('/api/*', (req, res, next) => {
 app.get('/health', asyncHandler(async (req, res) => {
   try {
     // Get system health
-    const healthResults = await healthCheckManager.runAll();
+    await healthCheckManager.runAll();
     const overallHealth = healthCheckManager.getOverallHealth();
     
     // Get system metrics
@@ -158,7 +156,7 @@ app.get('/health', asyncHandler(async (req, res) => {
     
     // Return appropriate status code based on health
     const statusCode = overallHealth.status === 'critical' ? 503 : 
-                      overallHealth.status === 'degraded' ? 200 : 200;
+      overallHealth.status === 'degraded' ? 200 : 200;
     
     res.status(statusCode).json(healthData);
     

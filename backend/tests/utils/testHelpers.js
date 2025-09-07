@@ -92,25 +92,25 @@ const generators = {
 
     // Add status-specific fields
     switch (status) {
-      case 'processing':
-        baseIntent.processingStartedAt = new Date().toISOString();
-        baseIntent.customerAddress = global.testUtils.generateStacksAddress();
-        baseIntent.transactionId = global.testUtils.generateTxId();
-        break;
-      case 'succeeded':
-        baseIntent.processingStartedAt = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-        baseIntent.succeededAt = new Date().toISOString();
-        baseIntent.customerAddress = global.testUtils.generateStacksAddress();
-        baseIntent.transactionId = global.testUtils.generateTxId();
-        break;
-      case 'payment_failed':
-        baseIntent.processingStartedAt = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-        baseIntent.failedAt = new Date().toISOString();
-        baseIntent.failureReason = 'Insufficient funds';
-        break;
-      case 'expired':
-        baseIntent.expiresAt = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-        break;
+    case 'processing':
+      baseIntent.processingStartedAt = new Date().toISOString();
+      baseIntent.customerAddress = global.testUtils.generateStacksAddress();
+      baseIntent.transactionId = global.testUtils.generateTxId();
+      break;
+    case 'succeeded':
+      baseIntent.processingStartedAt = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      baseIntent.succeededAt = new Date().toISOString();
+      baseIntent.customerAddress = global.testUtils.generateStacksAddress();
+      baseIntent.transactionId = global.testUtils.generateTxId();
+      break;
+    case 'payment_failed':
+      baseIntent.processingStartedAt = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      baseIntent.failedAt = new Date().toISOString();
+      baseIntent.failureReason = 'Insufficient funds';
+      break;
+    case 'expired':
+      baseIntent.expiresAt = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      break;
     }
 
     return { ...baseIntent, ...overrides };
