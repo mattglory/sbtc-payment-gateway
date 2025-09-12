@@ -42,6 +42,7 @@ const { apiKeyService } = require('./middleware/auth');
 const merchantRoutes = require('./routes/merchantRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const contractRoutes = require('./routes/contractRoutes');
+const bitcoinRoutes = require('./routes/bitcoinRoutes');
 
 const app = express();
 
@@ -78,6 +79,7 @@ app.use(preventSqlInjection);
 app.use('/api/payments', createRateLimit(15 * 60 * 1000, 200)); // 200 requests per 15 min for payments
 app.use('/api/merchants', createRateLimit(15 * 60 * 1000, 100)); // 100 requests per 15 min for merchants
 app.use('/api/contracts', createRateLimit(15 * 60 * 1000, 50)); // 50 requests per 15 min for contract calls
+app.use('/api/bitcoin', createRateLimit(15 * 60 * 1000, 150)); // 150 requests per 15 min for Bitcoin operations
 app.use('/', createRateLimit(15 * 60 * 1000, 1000)); // General rate limit
 
 // Middleware to record API metrics
@@ -217,9 +219,10 @@ app.get('/metrics', (req, res) => {
 });
 
 // API Routes with proper error handling
-app.use('/api/merchants', asyncHandler(merchantRoutes));
-app.use('/api/payments', asyncHandler(paymentRoutes));
-app.use('/api/contracts', asyncHandler(contractRoutes));
+app.use('/api/merchants', merchantRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/contracts', contractRoutes);
+app.use('/api/bitcoin', bitcoinRoutes);
 
 // Error handling middleware (order matters!)
 app.use(developmentErrorHandler);
