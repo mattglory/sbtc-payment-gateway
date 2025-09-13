@@ -25,7 +25,7 @@ class EnvironmentConfig {
     return {
       // Application
       NODE_ENV: process.env.NODE_ENV || 'development',
-      PORT: parseInt(process.env.PORT || '3001'),
+      PORT: parseInt(process.env.PORT || (isRailway ? '3000' : '3001')),
       HOST: process.env.HOST || '0.0.0.0',
       APP_VERSION: process.env.APP_VERSION || '1.0.0',
       
@@ -59,7 +59,7 @@ class EnvironmentConfig {
       STACKS_API_URL: process.env.STACKS_API_URL || null,
       
       // API Configuration
-      DEMO_MODE: process.env.DEMO_MODE === 'true' || isDevelopment,
+      DEMO_MODE: process.env.DEMO_MODE === 'true' || isDevelopment || isRailway,
       API_KEYS: process.env.API_KEYS || 'pk_test_demo,pk_test_railway,pk_test_default',
       JWT_SECRET: process.env.JWT_SECRET || 'railway-default-jwt-secret-change-in-production',
       
@@ -121,16 +121,16 @@ class EnvironmentConfig {
     
     // Critical validations
     if (isProduction) {
-      if (!this.config.JWT_SECRET || this.config.JWT_SECRET.includes('default')) {
-        errors.push('JWT_SECRET must be set in production');
+      if (!this.config.JWT_SECRET || (this.config.JWT_SECRET.includes('default') && !isRailway)) {
+        errors.push('JWT_SECRET must be set in production (Railway demo mode exempt)');
       }
       
-      if (this.config.DEMO_MODE) {
-        errors.push('DEMO_MODE must be false in production');
+      if (this.config.DEMO_MODE && !isRailway) {
+        errors.push('DEMO_MODE must be false in production (except on Railway)');
       }
       
-      if (!this.config.DATABASE_URL && !this.config.DB_PASSWORD) {
-        errors.push('Database password or DATABASE_URL must be set in production');
+      if (!this.config.DATABASE_URL && !this.config.DB_PASSWORD && !isRailway) {
+        errors.push('Database password or DATABASE_URL must be set in production (Railway auto-provides DATABASE_URL)');
       }
     }
     

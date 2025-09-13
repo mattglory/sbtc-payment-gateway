@@ -16,11 +16,11 @@ class ApiKeyService {
     this.DEMO_KEYS = ['pk_test_demo', 'pk_test_your_key', 'pk_test_123', 'pk_railway_health', 'pk_prod_railway'];
     
     // Railway-specific configuration
-    this.IS_RAILWAY = process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_NAME;
+    this.IS_RAILWAY = !!(process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID || process.env.RAILWAY_PROJECT_NAME);
     
-    // Auto-enable demo mode on Railway if no API keys are configured
-    if (this.IS_RAILWAY && this.CONFIGURED_API_KEYS.length === 0) {
-      console.log('[API_KEY] Railway environment detected with no configured API keys - enabling demo mode');
+    // Auto-enable demo mode on Railway for easier deployment
+    if (this.IS_RAILWAY) {
+      console.log('[API_KEY] Railway environment detected - enabling demo mode for easier deployment');
       this.DEMO_MODE = true;
     }
   }
