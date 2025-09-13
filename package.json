@@ -4,10 +4,7 @@
   "description": "Complete sBTC Payment Gateway - Stripe for Bitcoin on Stacks",
   "private": true,
   "workspaces": [
-    "backend",
-    "frontend",
-    "contracts",
-    "sdk"
+    "backend"
   ],
   "scripts": {
     "start": "cd backend && npm start",
@@ -32,21 +29,16 @@
     "deploy:staging": "npm run build && npm run docker:build",
     "deploy:production": "npm run test && npm run build && npm run docker:build",
     "test:railway": "node railway-test.js",
-    "verify:deployment": "node railway-test.js",
-    "postinstall": "cd backend && npm install"
+    "verify:deployment": "node railway-test.js"
   },
   "devDependencies": {
-    "@hirosystems/clarinet-sdk": "^3.5.0",
-    "@stacks/network": "^7.2.0",
-    "@stacks/transactions": "^7.2.0",
     "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
-    "nodemon": "^3.0.1",
-    "vitest": "^3.2.4"
+    "nodemon": "^3.0.1"
   },
   "engines": {
-    "node": ">=18.0.0 <21.0.0",
-    "npm": ">=8.0.0"
+    "node": ">=20.18.1 <=22.12.0",
+    "npm": ">=9.0.0"
   },
   "keywords": [
     "bitcoin",
