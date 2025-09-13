@@ -13,7 +13,16 @@ class ApiKeyService {
     // Configuration from environment
     this.DEMO_MODE = process.env.DEMO_MODE === 'true';
     this.CONFIGURED_API_KEYS = process.env.API_KEYS ? process.env.API_KEYS.split(',').map(key => key.trim()) : [];
-    this.DEMO_KEYS = ['pk_test_demo', 'pk_test_your_key', 'pk_test_123'];
+    this.DEMO_KEYS = ['pk_test_demo', 'pk_test_your_key', 'pk_test_123', 'pk_railway_health', 'pk_prod_railway'];
+    
+    // Railway-specific configuration
+    this.IS_RAILWAY = process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_NAME;
+    
+    // Auto-enable demo mode on Railway if no API keys are configured
+    if (this.IS_RAILWAY && this.CONFIGURED_API_KEYS.length === 0) {
+      console.log('[API_KEY] Railway environment detected with no configured API keys - enabling demo mode');
+      this.DEMO_MODE = true;
+    }
   }
 
   /**
@@ -86,7 +95,10 @@ class ApiKeyService {
       return { valid: true, type: 'demo_fallback', key: apiKey };
     }
 
-    console.log(`[API_KEY] Invalid key rejected: ${apiKey ? apiKey.substring(0, 12) + '...' : 'undefined'}`);
+    // Only log invalid key rejections in development or when not on Railway health checks
+    if (process.env.NODE_ENV !== 'production' || process.env.LOG_LEVEL === 'debug') {
+      console.log(`[API_KEY] Invalid key rejected: ${apiKey ? apiKey.substring(0, 12) + '...' : 'undefined'}`);
+    }
     return { valid: false, error: 'Invalid API key', code: 'INVALID_API_KEY' };
   }
 

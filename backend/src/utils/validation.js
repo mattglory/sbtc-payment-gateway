@@ -47,7 +47,7 @@ const ValidationRules = {
   stacksAddress: {
     required: true,
     type: 'string',
-    pattern: /^S[PT][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{39}$/,
+    pattern: /^S[PT][A-Z0-9]{39}$/,
     message: 'Please provide a valid Stacks address (starting with SP or ST)'
   },
 

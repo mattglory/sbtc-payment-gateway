@@ -10,6 +10,28 @@ const logger = require('../utils/logger');
 const { AuthenticationError, AuthorizationError } = require('../utils/errors');
 
 /**
+ * Railway Health Check Detection Middleware
+ * Detects Railway internal health checks and adds context
+ */
+const railwayHealthCheck = (req, res, next) => {
+  const userAgent = req.get('User-Agent') || '';
+  const isRailwayHealth = 
+    userAgent.includes('Railway') ||
+    userAgent.includes('health') ||
+    userAgent.includes('internal') ||
+    req.path === '/health' ||
+    req.path === '/health/detailed' ||
+    req.path === '/metrics';
+  
+  if (isRailwayHealth) {
+    req.isRailwayHealthCheck = true;
+    req.skipApiKeyLogging = true;
+  }
+  
+  next();
+};
+
+/**
  * Generate request ID middleware
  */
 const requestId = (req, res, next) => {
@@ -403,5 +425,6 @@ module.exports = {
   ipWhitelist,
   verifyWebhookSignature,
   preventSqlInjection,
-  performanceMonitor
+  performanceMonitor,
+  railwayHealthCheck
 };

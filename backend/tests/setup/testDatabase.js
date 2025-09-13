@@ -221,7 +221,7 @@ class TestDatabase {
       testData.merchants.push(merchant);
 
       // Create test payments for each merchant
-      const paymentStatuses = ['requires_payment_method', 'processing', 'succeeded', 'payment_failed', 'expired'];
+      const paymentStatuses = ['pending', 'processing', 'succeeded', 'payment_failed', 'expired'];
       
       for (let j = 0; j < 5; j++) {
         const payment = this.createPayment({
@@ -355,7 +355,7 @@ class TestDatabase {
       errors.push('Missing description');
     }
     
-    if (!['requires_payment_method', 'processing', 'succeeded', 'payment_failed', 'expired'].includes(payment.status)) {
+    if (!['pending', 'processing', 'succeeded', 'payment_failed', 'expired'].includes(payment.status)) {
       errors.push('Invalid status');
     }
     

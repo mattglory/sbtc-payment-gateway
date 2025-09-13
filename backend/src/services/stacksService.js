@@ -1,7 +1,4 @@
-/**
- * Stacks Blockchain Service
- * Real blockchain integration using Stacks APIs and transactions
- */
+const { createClient } = require('@stacks/blockchain-api-client');
 
 const { 
   StacksTestnet, 
@@ -20,17 +17,18 @@ const {
   noneCV,
   standardPrincipalCV
 } = require('@stacks/transactions');
-const { StacksBlockchainApi } = require('@stacks/blockchain-api-client');
 const logger = require('../utils/logger');
 const { ErrorFactory } = require('../utils/errors');
 
 class StacksService {
   constructor() {
     this.network = this.initializeNetwork();
-    this.api = new StacksBlockchainApi({ 
-      basePath: this.network.bnsLookupUrl.replace('/v1', ''),
-      fetchApi: fetch 
+    const baseUrl = this.network.bnsLookupUrl.replace('/v1', '');
+    
+    this.client = createClient({
+      baseUrl: baseUrl
     });
+    
     this.contractAddress = process.env.CONTRACT_ADDRESS || 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM';
     this.contractName = 'sbtc-payment-gateway';
     this.deployerPrivateKey = process.env.DEPLOYER_PRIVATE_KEY;
@@ -59,12 +57,12 @@ class StacksService {
   /**
    * Create payment intent on blockchain
    */
-  async createPaymentIntent(paymentId, amount, merchantId, description) {
+  async createPaymentIntent(paymentId, amount, description, expiresInBlocks = 144) {
     try {
       logger.info('Creating payment intent on Stacks blockchain', {
         paymentId,
         amount,
-        merchantId,
+        expiresInBlocks,
         contract: `${this.contractAddress}.${this.contractName}`
       });
 
@@ -75,8 +73,8 @@ class StacksService {
       const functionArgs = [
         stringAsciiCV(paymentId),
         uintCV(amount),
-        stringAsciiCV(merchantId),
-        description ? someCV(stringAsciiCV(description)) : noneCV()
+        description ? someCV(stringAsciiCV(description)) : noneCV(),
+        uintCV(expiresInBlocks)
       ];
 
       const txOptions = {
@@ -113,8 +111,7 @@ class StacksService {
 
     } catch (error) {
       logger.error('Failed to create payment intent on blockchain', error, {
-        paymentId,
-        merchantId
+        paymentId
       });
       
       if (error.name === 'ConfigurationError' || error.name === 'BlockchainError') {
@@ -128,12 +125,11 @@ class StacksService {
   /**
    * Process payment on blockchain
    */
-  async processPayment(paymentId, customerAddress, amount) {
+  async processPayment(paymentId, customerAddress) {
     try {
       logger.info('Processing payment on blockchain', {
         paymentId,
-        customerAddress,
-        amount
+        customerAddress
       });
 
       if (!this.deployerPrivateKey) {
@@ -142,18 +138,11 @@ class StacksService {
 
       const functionArgs = [
         stringAsciiCV(paymentId),
-        standardPrincipalCV(customerAddress),
-        uintCV(amount)
+        standardPrincipalCV(customerAddress)
       ];
 
-      // Add post-condition to ensure payment amount is transferred
-      const postConditions = [
-        makeStandardSTXPostCondition(
-          customerAddress,
-          FungibleConditionCode.GreaterEqual,
-          amount
-        )
-      ];
+      // Remove post-conditions since amount is determined by the contract
+      const postConditions = [];
 
       const txOptions = {
         contractAddress: this.contractAddress,
@@ -209,10 +198,11 @@ class StacksService {
     try {
       logger.debug('Fetching transaction status from blockchain', { txId });
 
-      const transaction = await this.api.transactionsApi.getTransactionById({
-        txId
+      const response = await this.client.GET('/extended/v1/tx/{tx_id}', {
+        params: { path: { tx_id: txId } }
       });
 
+      const transaction = response.data;
       const status = transaction.tx_status;
       const blockHeight = transaction.block_height;
       
@@ -257,15 +247,21 @@ class StacksService {
     try {
       logger.debug('Fetching payment intent from blockchain', { paymentId });
 
-      const result = await this.api.smartContractsApi.callReadOnlyFunction({
-        contractAddress: this.contractAddress,
-        contractName: this.contractName,
-        functionName: 'get-payment-intent',
-        readOnlyFunctionArgs: {
+      const response = await this.client.POST('/v2/contracts/call-read/{contract_address}/{contract_name}/{function_name}', {
+        params: { 
+          path: { 
+            contract_address: this.contractAddress,
+            contract_name: this.contractName,
+            function_name: 'get-payment-intent'
+          }
+        },
+        body: {
           sender: this.contractAddress,
           arguments: [`"${paymentId}"`]
         }
       });
+      
+      const result = response.data;
 
       if (result.okay && result.result) {
         // Parse Clarity value result
@@ -365,7 +361,8 @@ class StacksService {
    */
   async getCurrentBlockHeight() {
     try {
-      const info = await this.api.infoApi.getCoreApiInfo();
+      const response = await this.client.GET('/v2/info');
+      const info = response.data;
       return info.stacks_tip_height;
     } catch (error) {
       logger.error('Failed to get current block height', error);
@@ -378,9 +375,11 @@ class StacksService {
    */
   async getAccountBalance(address) {
     try {
-      const balance = await this.api.accountsApi.getAccountBalance({
-        principal: address
+      const response = await this.client.GET('/extended/v1/address/{principal}/balances', {
+        params: { path: { principal: address } }
       });
+      
+      const balance = response.data;
       
       return {
         stx: {

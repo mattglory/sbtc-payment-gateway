@@ -39,12 +39,12 @@ const samplePaymentIntents = [
   {
     amount: 50000,
     description: 'Coffee and pastry',
-    status: 'requires_payment_method'
+    status: 'pending'
   },
   {
     amount: 150000,
     description: 'Programming book collection',
-    status: 'requires_payment_method'
+    status: 'pending'
   },
   {
     amount: 2500000,

@@ -71,7 +71,7 @@ const generators = {
   /**
    * Generate test payment intent with realistic data
    */
-  paymentIntent: (status = 'requires_payment_method', overrides = {}) => {
+  paymentIntent: (status = 'pending', overrides = {}) => {
     const id = `pi_test_${generators.sequence.next().toString().padStart(6, '0')}`;
     const paymentId = `payment_${id.replace('pi_test_', '')}`;
     
@@ -270,7 +270,7 @@ const dbHelpers = {
       // Add test payments
       for (let i = 0; i < 3; i++) {
         const payment = generators.paymentIntent(
-          ['requires_payment_method', 'processing', 'succeeded'][i], 
+          ['pending', 'processing', 'succeeded'][i], 
           { merchantId: merchant.id }
         );
         dbHelpers.mockDb.payments.set(payment.id, payment);
