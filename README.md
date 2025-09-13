@@ -1,8 +1,14 @@
-# sBTC Payment Gateway
+# 🚀 sBTC Payment Gateway
 
-**Stripe for Bitcoin** - A complete payment gateway that makes accepting Bitcoin via sBTC as simple as traditional payments.
+**The First Professional Bitcoin Payment Infrastructure**
 
-**Stacks Builders Competition Entry**
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Try%20Now-brightgreen?style=for-the-badge)](https://sbtcpaymentgateway-matt-glorys-projects.vercel.app)
+[![API Status](https://img.shields.io/badge/API-Production%20Ready-blue?style=for-the-badge)](https://sbtc-payment-api-production.up.railway.app/health)
+[![Stacks Competition](https://img.shields.io/badge/Stacks-Competition%20Entry-orange?style=for-the-badge)](./STACKS_COMPETITION.md)
+
+> **"Making Bitcoin payments as simple as credit card payments"**
+
+**🏆 Stacks Builders Competition Entry** - Complete production-ready Bitcoin payment gateway built on sBTC
 
 ## Live Demo
 
@@ -12,9 +18,21 @@
 - **Backend API**: https://sbtc-payment-api-production.up.railway.app
 - **Health Check**: https://sbtc-payment-api-production.up.railway.app/health
 
+## ⚡ Try It Right Now!
+
+```bash
+# Test the live API instantly - this works right now!
+curl -X POST https://sbtc-payment-api-production.up.railway.app/api/payment-intents \
+  -H "Authorization: Bearer pk_test_demo" \
+  -H "Content-Type: application/json" \
+  -d '{"amount": 50000, "description": "Stacks Competition Demo"}'
+```
+
+**[📖 Quick Start Guide](./QUICK_START.md)** | **[🏆 Competition Entry Details](./STACKS_COMPETITION.md)** | **[🚀 Deployment Guide](./DEPLOYMENT.md)**
+
 ## What Is This?
 
-This project demonstrates a professional Bitcoin payment gateway using sBTC on the Stacks blockchain. Built for the Stacks Builders Competition, it provides a complete payment processing ecosystem with enterprise-grade reliability.
+This is a **production-ready Bitcoin payment gateway** using sBTC on the Stacks blockchain - the first professional payment infrastructure that makes Bitcoin as easy to accept as credit cards. Built for the Stacks Builders Competition, it demonstrates the full potential of sBTC for mainstream commerce adoption.
 
 ## Key Features
 

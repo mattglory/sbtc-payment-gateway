@@ -7,13 +7,12 @@ function App() {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   const handlePaymentSuccess = (payment: { id: string; amount: number; status: string }) => {
-    console.log('Payment successful:', payment);
     setPaymentSuccess(true);
     setTimeout(() => setPaymentSuccess(false), 5000);
   };
 
   const handlePaymentError = (error: string) => {
-    console.error('Payment failed:', error);
+    // Error is already handled by the PaymentWidget component
   };
 
   return (
@@ -27,8 +26,8 @@ function App() {
                 <CreditCard className="w-5 h-5 text-white" />
               </div>
               <h1 className="text-xl font-bold text-gray-900">sBTC Payment Gateway</h1>
-              <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
-                DEMO
+              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
+                LIVE
               </span>
             </div>
           </div>
@@ -42,7 +41,7 @@ function App() {
             Payment Widget Demo
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Experience the sBTC payment flow. This demo simulates payment processing.
+            Experience the sBTC payment flow with real blockchain integration.
           </p>
         </div>
         

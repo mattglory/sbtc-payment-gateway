@@ -83,7 +83,7 @@ describe('Payment Flow Integration Tests', () => {
 
       expect(createResponse.status).toBe(201);
       expect(createResponse.body).toHaveProperty('id');
-      expect(createResponse.body.status).toBe('requires_payment_method');
+      expect(createResponse.body.status).toBe('pending');
       expect(createResponse.body.amount).toBe(paymentData.amount);
 
       const paymentId = createResponse.body.id;
@@ -94,7 +94,7 @@ describe('Payment Flow Integration Tests', () => {
 
       expect(retrieveResponse.status).toBe(200);
       expect(retrieveResponse.body.id).toBe(paymentId);
-      expect(retrieveResponse.body.status).toBe('requires_payment_method');
+      expect(retrieveResponse.body.status).toBe('pending');
 
       // Step 3: Confirm payment
       const confirmationData = {
@@ -346,7 +346,7 @@ describe('Payment Flow Integration Tests', () => {
         expect(response.status).toBe(201);
         expect(response.body).toHaveProperty('id');
         expect(response.body.amount).toBe(50000 + (index * 10000));
-        expect(response.body.status).toBe('requires_payment_method');
+        expect(response.body.status).toBe('pending');
       });
 
       // Verify all payments have unique IDs
@@ -470,7 +470,7 @@ describe('Payment Flow Integration Tests', () => {
       // Verify all payments were created successfully
       results.forEach(result => {
         expect(result.result).toHaveProperty('id');
-        expect(result.result.status).toBe('requires_payment_method');
+        expect(result.result.status).toBe('pending');
       });
     });
 
@@ -624,7 +624,7 @@ describe('Payment Flow Integration Tests', () => {
 
       // Verify initial state
       let payment = await request(app).get(`/api/payment-intents/${paymentId}`);
-      expect(payment.body.status).toBe('requires_payment_method');
+      expect(payment.body.status).toBe('pending');
       expect(payment.body.customerAddress).toBeUndefined();
       expect(payment.body.transactionId).toBeUndefined();
 

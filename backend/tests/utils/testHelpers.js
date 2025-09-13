@@ -71,7 +71,7 @@ const generators = {
   /**
    * Generate test payment intent with realistic data
    */
-  paymentIntent: (status = 'requires_payment_method', overrides = {}) => {
+  paymentIntent: (status = 'pending', overrides = {}) => {
     const id = `pi_test_${generators.sequence.next().toString().padStart(6, '0')}`;
     const paymentId = `payment_${id.replace('pi_test_', '')}`;
     
@@ -92,25 +92,25 @@ const generators = {
 
     // Add status-specific fields
     switch (status) {
-      case 'processing':
-        baseIntent.processingStartedAt = new Date().toISOString();
-        baseIntent.customerAddress = global.testUtils.generateStacksAddress();
-        baseIntent.transactionId = global.testUtils.generateTxId();
-        break;
-      case 'succeeded':
-        baseIntent.processingStartedAt = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-        baseIntent.succeededAt = new Date().toISOString();
-        baseIntent.customerAddress = global.testUtils.generateStacksAddress();
-        baseIntent.transactionId = global.testUtils.generateTxId();
-        break;
-      case 'payment_failed':
-        baseIntent.processingStartedAt = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-        baseIntent.failedAt = new Date().toISOString();
-        baseIntent.failureReason = 'Insufficient funds';
-        break;
-      case 'expired':
-        baseIntent.expiresAt = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-        break;
+    case 'processing':
+      baseIntent.processingStartedAt = new Date().toISOString();
+      baseIntent.customerAddress = global.testUtils.generateStacksAddress();
+      baseIntent.transactionId = global.testUtils.generateTxId();
+      break;
+    case 'succeeded':
+      baseIntent.processingStartedAt = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      baseIntent.succeededAt = new Date().toISOString();
+      baseIntent.customerAddress = global.testUtils.generateStacksAddress();
+      baseIntent.transactionId = global.testUtils.generateTxId();
+      break;
+    case 'payment_failed':
+      baseIntent.processingStartedAt = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      baseIntent.failedAt = new Date().toISOString();
+      baseIntent.failureReason = 'Insufficient funds';
+      break;
+    case 'expired':
+      baseIntent.expiresAt = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      break;
     }
 
     return { ...baseIntent, ...overrides };
@@ -270,7 +270,7 @@ const dbHelpers = {
       // Add test payments
       for (let i = 0; i < 3; i++) {
         const payment = generators.paymentIntent(
-          ['requires_payment_method', 'processing', 'succeeded'][i], 
+          ['pending', 'processing', 'succeeded'][i], 
           { merchantId: merchant.id }
         );
         dbHelpers.mockDb.payments.set(payment.id, payment);

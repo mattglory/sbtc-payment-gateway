@@ -1,79 +1,197 @@
 /**
  * Enhanced Logger Utility
  * Production-ready logging with multiple levels and structured output
+ * Fixed for Railway deployment with safe JSON serialization
  */
 
 const winston = require('winston');
 const path = require('path');
+const { createWriteStream } = require('fs');
 
-// Custom log format
+/**
+ * Safe JSON serializer that handles circular references and complex objects
+ */
+function safeJsonStringify(obj, space) {
+  const seen = new WeakSet();
+  const cache = new Map();
+  
+  return JSON.stringify(obj, function(key, value) {
+    // Handle null and primitive values
+    if (value === null || typeof value !== 'object') {
+      return value;
+    }
+    
+    // Handle functions
+    if (typeof value === 'function') {
+      return '[Function]';
+    }
+    
+    // Handle circular references
+    if (seen.has(value)) {
+      return '[Circular]';
+    }
+    
+    // Handle special objects that cause issues
+    if (value instanceof Error) {
+      return {
+        name: value.name,
+        message: value.message,
+        stack: value.stack,
+        type: 'Error'
+      };
+    }
+    
+    // Handle Timeout objects and similar
+    if (value.constructor && value.constructor.name) {
+      const constructorName = value.constructor.name;
+      if (['Timeout', 'Timer', 'Immediate', 'WriteStream', 'ReadStream'].includes(constructorName)) {
+        return `[${constructorName}]`;
+      }
+    }
+    
+    // Handle Node.js internal objects
+    if (value && value._handle) {
+      return '[NodeJS Internal Object]';
+    }
+    
+    // Handle Buffer objects
+    if (Buffer.isBuffer(value)) {
+      return '[Buffer]';
+    }
+    
+    // Handle Date objects
+    if (value instanceof Date) {
+      return value.toISOString();
+    }
+    
+    // Handle RegExp objects
+    if (value instanceof RegExp) {
+      return value.toString();
+    }
+    
+    // Add to seen set for circular reference detection
+    seen.add(value);
+    
+    // For arrays and plain objects, continue normal serialization
+    if (Array.isArray(value) || value.constructor === Object) {
+      return value;
+    }
+    
+    // For other objects, try to extract useful information
+    try {
+      const result = {};
+      const keys = Object.getOwnPropertyNames(value).slice(0, 10); // Limit keys to prevent bloat
+      
+      for (const k of keys) {
+        if (k.startsWith('_')) continue; // Skip private properties
+        try {
+          const val = value[k];
+          if (typeof val !== 'function' && !k.includes('password') && !k.includes('secret')) {
+            result[k] = val;
+          }
+        } catch (e) {
+          result[k] = '[Getter Error]';
+        }
+      }
+      
+      result._type = value.constructor.name || 'Unknown';
+      return result;
+    } catch (e) {
+      return '[Unserializable Object]';
+    }
+  }, space);
+}
+
+// Custom log format with safe JSON serialization
 const logFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.errors({ stack: true }),
-  winston.format.json(),
   winston.format.printf(({ timestamp, level, message, service, requestId, ...meta }) => {
-    const logEntry = {
-      timestamp,
-      level: level.toUpperCase(),
-      service: service || 'sbtc-payment-gateway',
-      message,
-      requestId,
-      ...meta
-    };
-    
-    return JSON.stringify(logEntry, null, process.env.NODE_ENV === 'development' ? 2 : 0);
+    try {
+      const logEntry = {
+        timestamp,
+        level: level.toUpperCase(),
+        service: service || 'sbtc-payment-gateway',
+        message: typeof message === 'string' ? message : String(message),
+        requestId,
+        ...meta
+      };
+      
+      return safeJsonStringify(logEntry, process.env.NODE_ENV === 'development' ? 2 : 0);
+    } catch (error) {
+      // Fallback if even safe serialization fails
+      return JSON.stringify({
+        timestamp,
+        level: level.toUpperCase(),
+        service: service || 'sbtc-payment-gateway',
+        message: 'Log serialization error: ' + String(message),
+        error: error.message
+      });
+    }
   })
 );
 
-// Create logger instance
+// Create logger instance optimized for Railway deployment
+const isProduction = process.env.NODE_ENV === 'production';
+const isRailway = process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID;
+
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
+  level: process.env.LOG_LEVEL || (isProduction ? 'info' : 'debug'),
   format: logFormat,
   defaultMeta: { 
     service: 'sbtc-payment-gateway',
-    version: process.env.APP_VERSION || '1.0.0'
+    version: process.env.APP_VERSION || '1.0.0',
+    environment: process.env.NODE_ENV || 'development'
   },
   transports: [
-    // Console transport for development
+    // Always use console transport (Railway captures this)
     new winston.transports.Console({
       format: winston.format.combine(
-        winston.format.colorize(),
+        winston.format.colorize({ all: !isRailway }), // No colors on Railway
         winston.format.simple()
-      )
-    }),
-    
-    // File transport for production
-    new winston.transports.File({
-      filename: path.join(process.cwd(), 'logs', 'error.log'),
-      level: 'error',
-      maxsize: 10 * 1024 * 1024, // 10MB
-      maxFiles: 5,
-      format: logFormat
-    }),
-    
-    new winston.transports.File({
-      filename: path.join(process.cwd(), 'logs', 'combined.log'),
-      maxsize: 10 * 1024 * 1024, // 10MB
-      maxFiles: 5,
-      format: logFormat
+      ),
+      handleExceptions: true,
+      handleRejections: true
     })
   ],
   
-  // Handle uncaught exceptions and unhandled rejections
-  exceptionHandlers: [
-    new winston.transports.File({
-      filename: path.join(process.cwd(), 'logs', 'exceptions.log'),
-      format: logFormat
-    })
-  ],
+  // Don't exit on handled exceptions in production
+  exitOnError: !isProduction,
   
-  rejectionHandlers: [
-    new winston.transports.File({
-      filename: path.join(process.cwd(), 'logs', 'rejections.log'),
-      format: logFormat
-    })
-  ]
+  // Silence winston's internal logging
+  silent: false
 });
+
+// Only add file transports in local development
+if (!isRailway && !isProduction) {
+  try {
+    const fs = require('fs');
+    const logsDir = path.join(process.cwd(), 'logs');
+    
+    // Ensure logs directory exists
+    if (!fs.existsSync(logsDir)) {
+      fs.mkdirSync(logsDir, { recursive: true });
+    }
+    
+    logger.add(new winston.transports.File({
+      filename: path.join(logsDir, 'error.log'),
+      level: 'error',
+      maxsize: 5 * 1024 * 1024, // 5MB
+      maxFiles: 3,
+      format: logFormat
+    }));
+    
+    logger.add(new winston.transports.File({
+      filename: path.join(logsDir, 'combined.log'),
+      maxsize: 5 * 1024 * 1024, // 5MB
+      maxFiles: 3,
+      format: logFormat
+    }));
+  } catch (error) {
+    // Ignore file transport errors - console logging will still work
+    console.warn('Could not create file transports:', error.message);
+  }
+}
 
 // Create structured logging methods
 class Logger {
@@ -89,56 +207,118 @@ class Logger {
   }
 
   /**
+   * Safe metadata processing
+   */
+  _safeMeta(meta = {}) {
+    try {
+      if (meta === null || meta === undefined) {
+        return {};
+      }
+      
+      if (typeof meta !== 'object') {
+        return { data: String(meta) };
+      }
+      
+      // Create a clean copy to avoid modifying the original
+      const safeMeta = {};
+      const keys = Object.keys(meta).slice(0, 20); // Limit to prevent bloat
+      
+      for (const key of keys) {
+        try {
+          const value = meta[key];
+          if (value !== undefined && !key.includes('password') && !key.includes('secret')) {
+            safeMeta[key] = value;
+          }
+        } catch (e) {
+          safeMeta[key] = '[Getter Error]';
+        }
+      }
+      
+      return safeMeta;
+    } catch (e) {
+      return { metaError: e.message };
+    }
+  }
+
+  /**
    * Log debug messages
    */
   debug(message, meta = {}) {
-    this.logger.debug(message, meta);
+    try {
+      this.logger.debug(String(message), this._safeMeta(meta));
+    } catch (e) {
+      console.error('Logger.debug error:', e.message);
+    }
   }
 
   /**
    * Log info messages
    */
   info(message, meta = {}) {
-    this.logger.info(message, meta);
+    try {
+      this.logger.info(String(message), this._safeMeta(meta));
+    } catch (e) {
+      console.error('Logger.info error:', e.message);
+    }
   }
 
   /**
    * Log warning messages
    */
   warn(message, meta = {}) {
-    this.logger.warn(message, meta);
+    try {
+      this.logger.warn(String(message), this._safeMeta(meta));
+    } catch (e) {
+      console.error('Logger.warn error:', e.message);
+    }
   }
 
   /**
    * Log error messages
    */
   error(message, error = null, meta = {}) {
-    const errorMeta = {
-      ...meta,
-      error: error ? {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      } : null
-    };
-    
-    this.logger.error(message, errorMeta);
+    try {
+      const safeMeta = this._safeMeta(meta);
+      
+      if (error) {
+        safeMeta.error = {
+          message: error.message || String(error),
+          name: error.name || 'Error',
+          stack: error.stack || '[No stack trace]'
+        };
+        
+        // Include additional error properties safely
+        if (error.code) safeMeta.error.code = error.code;
+        if (error.errno) safeMeta.error.errno = error.errno;
+        if (error.syscall) safeMeta.error.syscall = error.syscall;
+      }
+      
+      this.logger.error(String(message), safeMeta);
+    } catch (e) {
+      console.error('Logger.error error:', e.message, 'Original message:', String(message));
+    }
   }
 
   /**
    * Log critical/fatal errors
    */
   fatal(message, error = null, meta = {}) {
-    const errorMeta = {
-      ...meta,
-      error: error ? {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      } : null
-    };
-    
-    this.logger.error(`[FATAL] ${message}`, errorMeta);
+    try {
+      const safeMeta = this._safeMeta(meta);
+      safeMeta.severity = 'fatal';
+      
+      if (error) {
+        safeMeta.error = {
+          message: error.message || String(error),
+          name: error.name || 'Error',
+          stack: error.stack || '[No stack trace]'
+        };
+      }
+      
+      this.logger.error(`[FATAL] ${String(message)}`, safeMeta);
+    } catch (e) {
+      console.error('Logger.fatal error:', e.message, 'Original message:', String(message));
+    }
   }
 
   /**
