@@ -55,7 +55,7 @@ export const useWallet = (): UseWalletReturn => {
             setConnection({
               isConnected: true,
               address,
-              network: networkInfo.network,
+              network: networkInfo.network as 'testnet' | 'mainnet',
               balance
             });
           }

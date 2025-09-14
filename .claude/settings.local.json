@@ -16,7 +16,8 @@
       "Bash(tree:*)",
       "Bash(npm audit:*)",
       "Bash(npm run lint:*)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(timeout 90 npm run build)"
     ],
     "deny": [],
     "ask": []

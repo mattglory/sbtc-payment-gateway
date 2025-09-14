@@ -7,11 +7,13 @@ function App() {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   const handlePaymentSuccess = (payment: { id: string; amount: number; status: string }) => {
+    console.log('Payment successful:', payment);
     setPaymentSuccess(true);
     setTimeout(() => setPaymentSuccess(false), 5000);
   };
 
   const handlePaymentError = (error: string) => {
+    console.error('Payment error:', error);
     // Error is already handled by the PaymentWidget component
   };
 
@@ -52,11 +54,12 @@ function App() {
         )}
 
         <PaymentWidget
+          paymentId="demo_payment_001"
           amount={50000} // 0.0005 BTC in sats
           description="Demo Product Purchase"
-          apiKey="pk_test_demo_key"
-          onSuccess={handlePaymentSuccess}
-          onError={handlePaymentError}
+          merchantAddress="ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM"
+          onPaymentSuccess={(txId) => handlePaymentSuccess({id: txId, amount: 50000, status: 'completed'})}
+          onPaymentFailure={handlePaymentError}
         />
 
         <div className="mt-12 max-w-4xl mx-auto">

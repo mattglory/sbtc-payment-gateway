@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "start": "cd backend && npm start",
-    "build": "cd backend && npm run build",
+    "build": "cd frontend && npm run build",
     "test": "cd backend && npm test",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "npm run dev --workspace=backend",
@@ -53,12 +53,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/your-username/sbtc-payment-gateway.git"
+    "url": "git+https://github.com/mattglory/sbtc-payment-gateway.git"
   },
   "bugs": {
-    "url": "https://github.com/your-username/sbtc-payment-gateway/issues"
+    "url": "https://github.com/mattglory/sbtc-payment-gateway/issues"
   },
-  "homepage": "https://github.com/your-username/sbtc-payment-gateway#readme",
+  "homepage": "https://github.com/mattglory/sbtc-payment-gateway#readme",
   "main": "index.js",
   "directories": {
     "doc": "docs"

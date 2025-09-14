@@ -45,7 +45,6 @@ export const PaymentWidget: React.FC<PaymentWidgetProps> = ({
     connectWallet,
     disconnectWallet,
     processPayment,
-    waitForConfirmation,
     getTransactionStatus,
     formatSTXAmount,
     isValidAddress,
