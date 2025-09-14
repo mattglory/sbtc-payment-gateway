@@ -4,7 +4,8 @@
   "description": "Complete sBTC Payment Gateway - Stripe for Bitcoin on Stacks",
   "private": true,
   "workspaces": [
-    "backend"
+    "backend",
+    "frontend"
   ],
   "scripts": {
     "start": "cd backend && npm start",
