@@ -24,7 +24,10 @@ const requireApiKey = (req, res, next) => {
           : 'Contact support for a valid API key'
     };
     
-    console.log(`[API_KEY] Request rejected from ${req.ip}: ${validation.error}`);
+    // Only log rejections in development, debug mode, or if not a Railway health check
+    if ((process.env.NODE_ENV !== 'production' || process.env.LOG_LEVEL === 'debug') && !req.skipApiKeyLogging) {
+      console.log(`[API_KEY] Request rejected from ${req.ip}: ${validation.error}`);
+    }
     return res.status(401).json(errorResponse);
   }
 

@@ -9,7 +9,7 @@ const { APIError, ErrorFactory } = require('../utils/errors');
 /**
  * Error Handler Middleware
  */
-const errorHandler = (error, req, res, next) => {
+const errorHandler = (error, req, res, _next) => {
   // Generate request ID if not present
   const requestId = req.requestId || req.headers['x-request-id'] || 'unknown';
   
@@ -73,7 +73,7 @@ const errorHandler = (error, req, res, next) => {
 /**
  * Not Found Handler
  */
-const notFoundHandler = (req, res, next) => {
+const notFoundHandler = (req, res, _next) => {
   const requestId = req.requestId || req.headers['x-request-id'] || 'unknown';
   
   logger.warn('Route Not Found', {
@@ -211,7 +211,7 @@ const rateLimitErrorHandler = (error, req, res, next) => {
  * Development Error Handler
  * Enhanced error information for development
  */
-const developmentErrorHandler = (error, req, res, next) => {
+const developmentErrorHandler = (error, req, res, _next) => {
   if (process.env.NODE_ENV === 'development') {
     const requestId = req.requestId || req.headers['x-request-id'] || 'unknown';
     
@@ -229,7 +229,7 @@ const developmentErrorHandler = (error, req, res, next) => {
     console.error('========================\n');
   }
 
-  next(error);
+  _next(error);
 };
 
 /**

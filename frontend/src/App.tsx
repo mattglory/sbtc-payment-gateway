@@ -13,7 +13,8 @@ function App() {
   };
 
   const handlePaymentError = (error: string) => {
-    console.error('Payment failed:', error);
+    console.error('Payment error:', error);
+    // Error is already handled by the PaymentWidget component
   };
 
   return (
@@ -27,8 +28,8 @@ function App() {
                 <CreditCard className="w-5 h-5 text-white" />
               </div>
               <h1 className="text-xl font-bold text-gray-900">sBTC Payment Gateway</h1>
-              <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
-                DEMO
+              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
+                LIVE
               </span>
             </div>
           </div>
@@ -42,7 +43,7 @@ function App() {
             Payment Widget Demo
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Experience the sBTC payment flow. This demo simulates payment processing.
+            Experience the sBTC payment flow with real blockchain integration.
           </p>
         </div>
         
@@ -53,11 +54,12 @@ function App() {
         )}
 
         <PaymentWidget
+          paymentId="demo_payment_001"
           amount={50000} // 0.0005 BTC in sats
           description="Demo Product Purchase"
-          apiKey="pk_test_demo_key"
-          onSuccess={handlePaymentSuccess}
-          onError={handlePaymentError}
+          merchantAddress="ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM"
+          onPaymentSuccess={(txId) => handlePaymentSuccess({id: txId, amount: 50000, status: 'completed'})}
+          onPaymentFailure={handlePaymentError}
         />
 
         <div className="mt-12 max-w-4xl mx-auto">

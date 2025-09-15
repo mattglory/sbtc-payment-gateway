@@ -275,6 +275,10 @@ class ErrorFactory {
     return new APIError(message, 500, 'INTERNAL_ERROR', details);
   }
 
+  static configuration(message, details = null) {
+    return new APIError(message, 500, 'CONFIGURATION_ERROR', details);
+  }
+
   /**
    * Convert unknown errors to APIError
    */
