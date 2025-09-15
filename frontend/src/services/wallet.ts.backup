@@ -9,7 +9,7 @@ import {
   openSignatureRequestPopup,
   showConnect,
 } from "@stacks/connect";
-import { STACKS_MAINNET, STACKS_TESTNET, StacksNetwork } from "@stacks/network";
+import { StacksMainnet, StacksTestnet, StacksNetwork } from "@stacks/network";
 import {
   AnchorMode,
   FungibleConditionCode,
@@ -57,7 +57,7 @@ class WalletService {
 
     // Initialize network based on environment
     this.isMainnet = process.env.REACT_APP_STACKS_NETWORK === "mainnet";
-    this.network = this.isMainnet ? STACKS_MAINNET : STACKS_TESTNET;
+    this.network = this.isMainnet ? new StacksMainnet() : new StacksTestnet();
 
     this.contractAddress =
       process.env.REACT_APP_CONTRACT_ADDRESS ||
