@@ -65,7 +65,7 @@ describe('PaymentService', () => {
       expect(validators.validatePaymentIntent(result)).toEqual([]);
       expect(result.amount).toBe(paymentRequest.amount);
       expect(result.description).toBe(paymentRequest.description);
-      expect(result.status).toBe('requires_payment_method');
+      expect(result.status).toBe('pending');
       expect(result.merchantId).toBe(merchantId);
       expect(result.fee).toBeGreaterThan(0);
       expect(result.currency).toBe('BTC');

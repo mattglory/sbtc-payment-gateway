@@ -2,7 +2,7 @@
  * Error classes for sBTC Payment Gateway SDK
  */
 
-export class SBTCError extends Error {
+export class sBTCError extends Error {
   public readonly name: string;
   public readonly code?: string;
   public readonly hint?: string;
@@ -15,14 +15,14 @@ export class SBTCError extends Error {
     requestId?: string
   ) {
     super(message);
-    this.name = 'SBTCError';
+    this.name = 'sBTCError';
     this.code = code;
     this.hint = hint;
     this.requestId = requestId;
 
     // Maintains proper stack trace for where our error was thrown (only available on V8)
     if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, SBTCError);
+      Error.captureStackTrace(this, sBTCError);
     }
   }
 
@@ -38,7 +38,7 @@ export class SBTCError extends Error {
   }
 }
 
-export class SBTCApiError extends SBTCError {
+export class sBTCApiError extends sBTCError {
   public readonly status: number;
   public readonly response?: any;
 
@@ -51,7 +51,7 @@ export class SBTCApiError extends SBTCError {
     response?: any
   ) {
     super(message, code, hint, requestId);
-    Object.defineProperty(this, 'name', { value: 'SBTCApiError', configurable: true });
+    Object.defineProperty(this, 'name', { value: 'sBTCApiError', configurable: true });
     this.status = status;
     this.response = response;
   }
@@ -62,7 +62,7 @@ export class SBTCApiError extends SBTCError {
     const hint = response?.hint;
     const requestId = response?.requestId;
 
-    return new SBTCApiError(error, status, code, hint, requestId, response);
+    return new sBTCApiError(error, status, code, hint, requestId, response);
   }
 
   toJSON() {
@@ -74,17 +74,17 @@ export class SBTCApiError extends SBTCError {
   }
 }
 
-export class SBTCNetworkError extends SBTCError {
+export class sBTCNetworkError extends sBTCError {
   public readonly cause?: Error;
 
   constructor(message: string, cause?: Error) {
     super(message, 'NETWORK_ERROR');
-    Object.defineProperty(this, 'name', { value: 'SBTCNetworkError', configurable: true });
+    Object.defineProperty(this, 'name', { value: 'sBTCNetworkError', configurable: true });
     this.cause = cause;
   }
 
   static fromError(error: Error) {
-    return new SBTCNetworkError(
+    return new sBTCNetworkError(
       `Network request failed: ${error.message}`,
       error
     );
@@ -98,13 +98,13 @@ export class SBTCNetworkError extends SBTCError {
   }
 }
 
-export class SBTCValidationError extends SBTCError {
+export class sBTCValidationError extends sBTCError {
   public readonly field?: string;
   public readonly value?: any;
 
   constructor(message: string, field?: string, value?: any) {
     super(message, 'VALIDATION_ERROR');
-    Object.defineProperty(this, 'name', { value: 'SBTCValidationError', configurable: true });
+    Object.defineProperty(this, 'name', { value: 'sBTCValidationError', configurable: true });
     this.field = field;
     this.value = value;
   }
@@ -118,9 +118,9 @@ export class SBTCValidationError extends SBTCError {
   }
 }
 
-export class SBTCConfigurationError extends SBTCError {
+export class sBTCConfigurationError extends sBTCError {
   constructor(message: string) {
     super(message, 'CONFIGURATION_ERROR');
-    Object.defineProperty(this, 'name', { value: 'SBTCConfigurationError', configurable: true });
+    Object.defineProperty(this, 'name', { value: 'sBTCConfigurationError', configurable: true });
   }
 }

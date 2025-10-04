@@ -39,12 +39,12 @@ const samplePaymentIntents = [
   {
     amount: 50000,
     description: 'Coffee and pastry',
-    status: 'requires_payment_method'
+    status: 'pending'
   },
   {
     amount: 150000,
     description: 'Programming book collection',
-    status: 'requires_payment_method'
+    status: 'pending'
   },
   {
     amount: 2500000,
@@ -317,7 +317,7 @@ const edgeCases = {
     veryLong: 'A'.repeat(10000),
     unicode: 'Café & Restaurant "Le Spécial" - München 🚀💰',
     specialChars: '!@#$%^&*()_+-=[]{}|;:,.<>?',
-    sqlInjection: "'; DROP TABLE payments; --",
+    sqlInjection: '\'; DROP TABLE payments; --',
     xss: '<script>alert("xss")</script>'
   },
   addresses: {

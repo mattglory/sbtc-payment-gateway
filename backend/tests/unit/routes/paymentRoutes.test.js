@@ -66,7 +66,7 @@ describe('Payment Routes', () => {
     };
 
     test('should create payment intent with valid data and API key', async () => {
-      const expectedPayment = generators.paymentIntent('requires_payment_method', {
+      const expectedPayment = generators.paymentIntent('pending', {
         merchantId: testMerchant.id,
         ...validPaymentData
       });
@@ -83,7 +83,7 @@ describe('Payment Routes', () => {
         id: expectedPayment.id,
         amount: validPaymentData.amount,
         description: validPaymentData.description,
-        status: 'requires_payment_method'
+        status: 'pending'
       });
 
       expect(mockPaymentService.createPaymentIntent).toHaveBeenCalledWith(
@@ -93,7 +93,7 @@ describe('Payment Routes', () => {
     });
 
     test('should include request ID in response headers', async () => {
-      const expectedPayment = generators.paymentIntent('requires_payment_method');
+      const expectedPayment = generators.paymentIntent('pending');
       mockPaymentService.createPaymentIntent = jest.fn().mockResolvedValue(expectedPayment);
 
       const requestId = 'test-request-id-123';
@@ -109,7 +109,7 @@ describe('Payment Routes', () => {
     });
 
     test('should log API key type and client IP', async () => {
-      const expectedPayment = generators.paymentIntent('requires_payment_method');
+      const expectedPayment = generators.paymentIntent('pending');
       mockPaymentService.createPaymentIntent = jest.fn().mockResolvedValue(expectedPayment);
 
       const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
@@ -285,7 +285,7 @@ describe('Payment Routes', () => {
     const testPaymentId = 'pi_test_123456789';
 
     test('should retrieve existing payment intent', async () => {
-      const expectedPayment = generators.paymentIntent('requires_payment_method', {
+      const expectedPayment = generators.paymentIntent('pending', {
         id: testPaymentId
       });
 
@@ -297,14 +297,14 @@ describe('Payment Routes', () => {
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject({
         id: testPaymentId,
-        status: 'requires_payment_method'
+        status: 'pending'
       });
 
       expect(mockPaymentService.getPaymentIntent).toHaveBeenCalledWith(testPaymentId);
     });
 
     test('should retrieve payment in different states', async () => {
-      const statuses = ['requires_payment_method', 'processing', 'succeeded', 'payment_failed', 'expired'];
+      const statuses = ['pending', 'processing', 'succeeded', 'payment_failed', 'expired'];
 
       for (const status of statuses) {
         const payment = generators.paymentIntent(status, { id: `pi_test_${status}` });
@@ -341,7 +341,7 @@ describe('Payment Routes', () => {
     });
 
     test('should not require authentication for retrieval', async () => {
-      const expectedPayment = generators.paymentIntent('requires_payment_method', {
+      const expectedPayment = generators.paymentIntent('pending', {
         id: testPaymentId
       });
 

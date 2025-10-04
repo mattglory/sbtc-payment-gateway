@@ -5,7 +5,7 @@
  * Note: These hooks are only available when React is present in the environment
  */
 
-import { SBTCPaymentGateway } from './client';
+import { sBTCPaymentGateway } from './client';
 import type {
   PaymentIntent,
   PaymentStatus,
@@ -13,7 +13,7 @@ import type {
   HealthStatus,
   PaymentEvent,
   PaymentEventType,
-  SBTCClientConfig,
+  sBTCClientConfig,
 } from './types';
 
 // Check if React is available
@@ -70,7 +70,7 @@ if (typeof window !== 'undefined' && (window as any).React) {
   /**
    * Hook for managing payment intents
    */
-  usePaymentIntent = (client: SBTCPaymentGateway, paymentId?: string) => {
+  usePaymentIntent = (client: sBTCPaymentGateway, paymentId?: string) => {
     const [paymentIntent, setPaymentIntent] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -148,7 +148,7 @@ if (typeof window !== 'undefined' && (window as any).React) {
   /**
    * Hook for monitoring payment status with auto-refresh
    */
-  usePaymentStatus = (client: SBTCPaymentGateway, paymentId: string, pollInterval: number = 5000) => {
+  usePaymentStatus = (client: sBTCPaymentGateway, paymentId: string, pollInterval: number = 5000) => {
     const [status, setStatus] = useState('requires_payment_method');
     const [paymentIntent, setPaymentIntent] = useState(null);
     const [error, setError] = useState(null);
@@ -207,7 +207,7 @@ if (typeof window !== 'undefined' && (window as any).React) {
   /**
    * Hook for merchant dashboard data
    */
-  useMerchantDashboard = (client: SBTCPaymentGateway, refreshInterval: number = 0) => {
+  useMerchantDashboard = (client: sBTCPaymentGateway, refreshInterval: number = 0) => {
     const [dashboard, setDashboard] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -246,7 +246,7 @@ if (typeof window !== 'undefined' && (window as any).React) {
   /**
    * Hook for system health monitoring
    */
-  useSystemHealth = (client: SBTCPaymentGateway, checkInterval: number = 30000) => {
+  useSystemHealth = (client: sBTCPaymentGateway, checkInterval: number = 30000) => {
     const [health, setHealth] = useState(null);
     const [isHealthy, setIsHealthy] = useState(true);
     const [error, setError] = useState(null);
@@ -352,8 +352,8 @@ if (typeof window !== 'undefined' && (window as any).React) {
 }
 
 // Utility function to create SDK client
-export const createSBTCClient = (config: SBTCClientConfig): SBTCPaymentGateway => {
-  return new SBTCPaymentGateway(config);
+export const createsBTCClient = (config: sBTCClientConfig): sBTCPaymentGateway => {
+  return new sBTCPaymentGateway(config);
 };
 
 // Export hooks (will be stubs if React is not available)

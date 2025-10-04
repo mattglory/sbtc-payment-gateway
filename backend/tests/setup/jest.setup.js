@@ -56,7 +56,7 @@ global.testUtils = {
     fee: 1000,
     currency: 'BTC',
     description: 'Test payment intent',
-    status: 'requires_payment_method',
+    status: 'pending',
     clientSecret: `pi_test_${Math.random().toString(36).substring(2, 15)}_secret`,
     createdAt: new Date().toISOString(),
     expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes from now

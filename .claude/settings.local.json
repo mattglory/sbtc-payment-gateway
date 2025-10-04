@@ -13,7 +13,12 @@
       "Bash(curl:*)",
       "Bash(find:*)",
       "Bash(npm run lint)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(npm audit:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npx eslint:*)",
+      "Bash(timeout 90 npm run build)",
+      "Bash(git remote get-url:*)"
     ],
     "deny": [],
     "ask": []

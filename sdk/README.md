@@ -15,10 +15,10 @@ npm install @sbtc/payment-gateway-sdk
 ### Basic Usage
 
 ```typescript
-import { SBTCPaymentGateway } from '@sbtc/payment-gateway-sdk';
+import { sBTCPaymentGateway } from '@sbtc/payment-gateway-sdk';
 
 // Initialize the client
-const sbtc = new SBTCPaymentGateway({
+const sbtc = new sBTCPaymentGateway({
   apiKey: 'your-api-key-here',
   // baseUrl: 'https://your-custom-endpoint.com', // Optional
 });
@@ -38,7 +38,7 @@ console.log('Client Secret:', paymentIntent.clientSecret);
 ### Client Configuration
 
 ```typescript
-const sbtc = new SBTCPaymentGateway({
+const sbtc = new sBTCPaymentGateway({
   apiKey: 'pk_test_...',           // Your API key
   baseUrl?: 'https://...',         // Custom API endpoint (optional)
   timeout?: 30000,                 // Request timeout in ms (default: 30000)
@@ -259,24 +259,24 @@ The SDK provides comprehensive error handling:
 
 ```typescript
 import { 
-  SBTCError, 
-  SBTCApiError, 
-  SBTCNetworkError, 
-  SBTCValidationError 
+  sBTCError, 
+  sBTCApiError, 
+  sBTCNetworkError, 
+  sBTCValidationError 
 } from '@sbtc/payment-gateway-sdk';
 
 try {
   const payment = await sbtc.createPaymentIntent({ amount: -100 });
 } catch (error) {
-  if (error instanceof SBTCValidationError) {
+  if (error instanceof sBTCValidationError) {
     console.log('Validation error:', error.message);
     console.log('Field:', error.field);
     console.log('Value:', error.value);
-  } else if (error instanceof SBTCApiError) {
+  } else if (error instanceof sBTCApiError) {
     console.log('API error:', error.message);
     console.log('Status:', error.status);
     console.log('Request ID:', error.requestId);
-  } else if (error instanceof SBTCNetworkError) {
+  } else if (error instanceof sBTCNetworkError) {
     console.log('Network error:', error.message);
   }
 }

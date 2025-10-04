@@ -5,7 +5,6 @@
 
 const ContractService = require('../services/contractService');
 const logger = require('../utils/logger');
-const { Validator } = require('../utils/validation');
 const { ErrorFactory } = require('../utils/errors');
 const { performanceMonitor } = require('../utils/monitoring');
 
@@ -25,19 +24,20 @@ class ContractController {
       performanceMonitor.start('contract_info');
       
       // Log request details
-      logger.contract('get_info_start', null, {
+      logger.info('Contract info request started', {
         requestId,
         ip: req.ip,
         userAgent: req.get('User-Agent')
       });
 
       // Get contract information
-      const contractInfo = this.contractService.getContractInfo();
+      const contractInfo = await this.contractService.getContractInfo();
       
       // Log successful retrieval
-      logger.contract('get_info_success', null, {
+      logger.info('Contract info retrieved successfully', {
         requestId,
-        contractAddress: contractInfo.address
+        contractAddress: contractInfo.contractAddress,
+        contractName: contractInfo.contractName
       });
 
       // Record performance metrics
@@ -61,6 +61,13 @@ class ContractController {
       });
 
       // Handle different error types
+      if (error.name === 'ValidationError') {
+        return res.status(400).json({
+          ...error.toJSON(),
+          requestId
+        });
+      }
+
       if (error.statusCode) {
         return res.status(error.statusCode).json({
           ...error.toJSON(),
@@ -79,84 +86,63 @@ class ContractController {
   }
 
   /**
-   * Create smart contract payment intent with comprehensive validation
+   * Get contract statistics with comprehensive monitoring
    */
-  async createPayment(req, res) {
+  async getStats(req, res) {
     const requestId = req.requestId || 'unknown';
     
     try {
       // Performance monitoring
-      performanceMonitor.start('contract_payment_creation');
+      performanceMonitor.start('contract_stats');
       
       // Log request details
-      logger.contract('create_payment_start', null, {
+      logger.info('Contract stats request started', {
         requestId,
         ip: req.ip,
-        userAgent: req.get('User-Agent'),
-        amount: req.body?.amount
+        userAgent: req.get('User-Agent')
       });
 
-      // Validate input data
-      const validatedData = Validator.validateContractPayment(req.body);
+      // Get contract statistics
+      const stats = await this.contractService.getContractStats();
       
-      // Create contract payment
-      const result = await this.contractService.createPayment(validatedData);
-      
-      // Log successful creation
-      logger.contract('create_payment_success', result.id, {
+      // Log successful retrieval
+      logger.info('Contract stats retrieved successfully', {
         requestId,
-        amount: result.amount,
-        recipient: result.recipient
+        totalMerchants: stats.totalMerchants,
+        totalPayments: stats.totalPayments,
+        totalVolume: stats.totalVolume
       });
 
       // Record performance metrics
-      const performanceResult = performanceMonitor.end('contract_payment_creation');
-      if (performanceResult && performanceResult.duration > 3000) {
-        logger.performance('Slow contract payment creation', performanceResult.duration, {
-          requestId,
-          paymentId: result.id
+      const performanceResult = performanceMonitor.end('contract_stats');
+      if (performanceResult && performanceResult.duration > 1000) {
+        logger.performance('Slow contract stats retrieval', performanceResult.duration, {
+          requestId
         });
       }
       
-      res.json(result);
+      res.json(stats);
 
     } catch (error) {
       // End performance monitoring
-      performanceMonitor.end('contract_payment_creation');
+      performanceMonitor.end('contract_stats');
       
       // Log error with context
-      logger.error('Contract payment creation failed', error, {
+      logger.error('Contract stats retrieval failed', error, {
         requestId,
-        body: req.body,
         ip: req.ip
       });
 
       // Handle different error types
-      if (error.name === 'ValidationError') {
-        return res.status(400).json({
-          ...error.toJSON(),
-          requestId
-        });
-      }
-
       if (error.statusCode) {
         return res.status(error.statusCode).json({
           ...error.toJSON(),
           requestId
         });
       }
-
-      // Handle legacy error messages
-      if (error.message?.includes('Missing required fields')) {
-        const validationError = ErrorFactory.validation('Missing required fields for contract payment');
-        return res.status(400).json({
-          ...validationError.toJSON(),
-          requestId
-        });
-      }
       
       // Generic error response
-      const genericError = ErrorFactory.internal('Failed to create contract payment');
+      const genericError = ErrorFactory.internal('Failed to retrieve contract statistics');
       res.status(500).json({
         ...genericError.toJSON(),
         requestId,
@@ -166,56 +152,54 @@ class ContractController {
   }
 
   /**
-   * Process smart contract payment with comprehensive monitoring
+   * Get payment status from smart contract
    */
-  async processPayment(req, res) {
+  async getPaymentStatus(req, res) {
     const requestId = req.requestId || 'unknown';
+    const { paymentId } = req.params;
     
     try {
       // Performance monitoring
-      performanceMonitor.start('contract_payment_processing');
+      performanceMonitor.start('contract_payment_status');
       
       // Log request details
-      logger.contract('process_payment_start', req.body?.paymentId, {
+      logger.info('Contract payment status request started', {
         requestId,
+        paymentId,
         ip: req.ip,
-        userAgent: req.get('User-Agent'),
-        paymentId: req.body?.paymentId
+        userAgent: req.get('User-Agent')
       });
 
-      // Validate input data
-      const validatedData = Validator.validateContractPaymentProcessing(req.body);
+      // Get payment status from contract
+      const status = await this.contractService.getPaymentStatus(paymentId);
       
-      // Process contract payment
-      const result = await this.contractService.processPayment(validatedData);
-      
-      // Log successful processing
-      logger.contract('process_payment_success', result.paymentId, {
+      // Log successful retrieval
+      logger.info('Contract payment status retrieved successfully', {
         requestId,
-        paymentId: result.paymentId,
-        status: result.status,
-        transactionId: result.transactionId
+        paymentId,
+        status: status.status,
+        isValid: status.isValid
       });
 
       // Record performance metrics
-      const performanceResult = performanceMonitor.end('contract_payment_processing');
-      if (performanceResult && performanceResult.duration > 5000) {
-        logger.performance('Slow contract payment processing', performanceResult.duration, {
+      const performanceResult = performanceMonitor.end('contract_payment_status');
+      if (performanceResult && performanceResult.duration > 500) {
+        logger.performance('Slow contract payment status retrieval', performanceResult.duration, {
           requestId,
-          paymentId: result.paymentId
+          paymentId
         });
       }
       
-      res.json(result);
+      res.json(status);
 
     } catch (error) {
       // End performance monitoring
-      performanceMonitor.end('contract_payment_processing');
+      performanceMonitor.end('contract_payment_status');
       
       // Log error with context
-      logger.error('Contract payment processing failed', error, {
+      logger.error('Contract payment status retrieval failed', error, {
         requestId,
-        body: req.body,
+        paymentId,
         ip: req.ip
       });
 
@@ -233,106 +217,9 @@ class ContractController {
           requestId
         });
       }
-
-      // Handle legacy error messages
-      if (error.message?.includes('Missing required fields')) {
-        const validationError = ErrorFactory.validation('Missing required fields for payment processing');
-        return res.status(400).json({
-          ...validationError.toJSON(),
-          requestId
-        });
-      }
       
       // Generic error response
-      const genericError = ErrorFactory.internal('Failed to process contract payment');
-      res.status(500).json({
-        ...genericError.toJSON(),
-        requestId,
-        ...(process.env.NODE_ENV === 'development' && { originalError: error.message })
-      });
-    }
-  }
-
-  /**
-   * Register merchant on smart contract with comprehensive validation
-   */
-  async registerMerchant(req, res) {
-    const requestId = req.requestId || 'unknown';
-    
-    try {
-      // Performance monitoring
-      performanceMonitor.start('contract_merchant_registration');
-      
-      // Log request details
-      logger.contract('register_merchant_start', null, {
-        requestId,
-        ip: req.ip,
-        userAgent: req.get('User-Agent'),
-        merchantAddress: req.body?.merchantAddress
-      });
-
-      // Validate input data
-      const validatedData = Validator.validateContractMerchantRegistration(req.body);
-      
-      // Register merchant on contract
-      const result = await this.contractService.registerMerchant(validatedData);
-      
-      // Log successful registration
-      logger.contract('register_merchant_success', result.merchantId, {
-        requestId,
-        merchantId: result.merchantId,
-        merchantAddress: result.merchantAddress,
-        transactionId: result.transactionId
-      });
-
-      // Record performance metrics
-      const performanceResult = performanceMonitor.end('contract_merchant_registration');
-      if (performanceResult && performanceResult.duration > 3000) {
-        logger.performance('Slow contract merchant registration', performanceResult.duration, {
-          requestId,
-          merchantId: result.merchantId
-        });
-      }
-      
-      res.json(result);
-
-    } catch (error) {
-      // End performance monitoring
-      performanceMonitor.end('contract_merchant_registration');
-      
-      // Log error with context
-      logger.error('Contract merchant registration failed', error, {
-        requestId,
-        body: req.body,
-        ip: req.ip
-      });
-
-      // Handle different error types
-      if (error.name === 'ValidationError') {
-        return res.status(400).json({
-          ...error.toJSON(),
-          requestId
-        });
-      }
-
-      if (error.statusCode) {
-        return res.status(error.statusCode).json({
-          ...error.toJSON(),
-          requestId
-        });
-      }
-
-      // Handle legacy error messages
-      if (error.message?.includes('Missing required fields')) {
-        const validationError = ErrorFactory.validation('Missing required fields for merchant registration');
-        return res.status(400).json({
-          ...validationError.toJSON(),
-          requestId
-        });
-      }
-      
-      // Generic error response
-      const genericError = ErrorFactory.internal('Failed to register merchant on contract');
+      const genericError = ErrorFactory.internal('Failed to retrieve payment status');
       res.status(500).json({
         ...genericError.toJSON(),
         requestId,

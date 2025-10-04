@@ -2,7 +2,7 @@
  * TypeScript type definitions for sBTC Payment Gateway SDK
  */
 
-export interface SBTCClientConfig {
+export interface sBTCClientConfig {
   apiKey: string;
   baseUrl?: string;
   timeout?: number;

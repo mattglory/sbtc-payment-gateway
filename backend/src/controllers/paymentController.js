@@ -6,6 +6,7 @@
 const PaymentService = require('../services/paymentService');
 const MerchantService = require('../services/merchantService');
 const ApiKeyService = require('../services/apiKeyService');
+const TransactionService = require('../services/transactionService');
 const logger = require('../utils/logger');
 const { Validator } = require('../utils/validation');
 const { ErrorFactory } = require('../utils/errors');
@@ -16,6 +17,7 @@ class PaymentController {
     this.paymentService = new PaymentService();
     this.merchantService = new MerchantService();
     this.apiKeyService = new ApiKeyService();
+    this.transactionService = new TransactionService();
   }
 
   /**
@@ -58,7 +60,21 @@ class PaymentController {
 
       // Create payment intent
       const result = await this.paymentService.createPaymentIntent(merchantId, validatedData);
-      
+
+      // Log transaction
+      this.transactionService.logTransaction({
+        merchantId,
+        amount: result.amount,
+        status: 'pending',
+        description: result.description,
+        paymentIntentId: result.id,
+        metadata: {
+          requestId,
+          ip: req.ip,
+          userAgent: req.get('User-Agent')
+        }
+      });
+
       // Log successful creation
       logger.payment('create_intent_success', result.id, {
         requestId,
@@ -145,11 +161,36 @@ class PaymentController {
 
       // Confirm the payment
       const result = await this.paymentService.confirmPayment(id, validatedData);
-      
+
+      // Update transaction status based on payment result
+      try {
+        const paymentIntent = await this.paymentService.getPaymentIntent(id);
+        const transactions = this.transactionService.getTransactions({
+          merchantId: paymentIntent.merchantId
+        }).filter(t => t.paymentIntentId === id);
+
+        if (transactions.length > 0) {
+          const transaction = transactions[0];
+          const newStatus = result.status === 'succeeded' ? 'completed' :
+                          result.status === 'failed' ? 'failed' : 'pending';
+
+          this.transactionService.updateTransactionStatus(
+            transaction.id,
+            newStatus,
+            {
+              txId: result.txId,
+              updatedAt: new Date().toISOString()
+            }
+          );
+        }
+      } catch (txError) {
+        logger.warn('Failed to update transaction status', txError);
+      }
+
       // Update merchant stats asynchronously after successful payment processing
       const paymentIntent = await this.paymentService.getPaymentIntent(id);
       this.updateMerchantStatsAsync(paymentIntent);
-      
+
       // Log successful confirmation
       logger.payment('confirm_payment_success', id, {
         requestId,

@@ -5,7 +5,6 @@
 
 const os = require('os');
 const fs = require('fs').promises;
-const path = require('path');
 const { performance } = require('perf_hooks');
 const logger = require('./logger');
 
@@ -250,6 +249,29 @@ class HealthCheckManager {
  */
 const createDefaultHealthChecks = (healthManager) => {
   const isDevelopment = process.env.NODE_ENV === 'development';
+
+  // Database health check
+  healthManager.register('database', async () => {
+    try {
+      const { databaseHealthCheck } = require('./database');
+      return await databaseHealthCheck();
+    } catch (error) {
+      // In development, database failures are often expected (especially for PostgreSQL)
+      if (isDevelopment && error.message.includes('Database not initialized')) {
+        // Try to initialize the database
+        try {
+          const { databaseManager } = require('./database');
+          await databaseManager.initialize();
+          const { databaseHealthCheck } = require('./database');
+          return await databaseHealthCheck();
+        } catch (initError) {
+          // If initialization fails in development, it's not critical
+          throw new Error(`Database unavailable: ${initError.message}`);
+        }
+      }
+      throw error;
+    }
+  }, { critical: !isDevelopment, timeout: 10000 }); // Non-critical in development, longer timeout
   
   // Basic system health
   healthManager.register('system', async () => {
@@ -277,7 +299,7 @@ const createDefaultHealthChecks = (healthManager) => {
   // Disk space check
   healthManager.register('disk', async () => {
     try {
-      const stats = await fs.stat(process.cwd());
+      await fs.stat(process.cwd());
       // This is a basic check - in production, use proper disk space monitoring
       return { available: true, path: process.cwd() };
     } catch (error) {
@@ -490,48 +512,149 @@ alertManager.setThreshold('cpu_load', 80, 'warning');
 alertManager.setThreshold('response_time', 2000, 'warning');
 alertManager.setThreshold('error_rate', 5, 'warning');
 
-// Periodic monitoring
+// Safe interval management
+const intervals = new Set();
+
+/**
+ * Safe interval wrapper that prevents uncaught exceptions
+ */
+function safeSetInterval(callback, delay, description = 'interval') {
+  const wrappedCallback = async () => {
+    try {
+      await callback();
+    } catch (error) {
+      logger.error(`${description} failed`, error, {
+        interval: description,
+        delay
+      });
+    }
+  };
+  
+  const intervalId = setInterval(wrappedCallback, delay);
+  intervals.add(intervalId);
+  
+  return intervalId;
+}
+
+/**
+ * Clear all monitoring intervals
+ */
+function clearAllIntervals() {
+  for (const intervalId of intervals) {
+    clearInterval(intervalId);
+  }
+  intervals.clear();
+  logger.info('All monitoring intervals cleared');
+}
+
+// Periodic monitoring with safe error handling
 const startPeriodicMonitoring = () => {
   const isDevelopment = process.env.NODE_ENV === 'development';
+  const isRailway = process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID;
   
-  // Run health checks every minute (or every 2 minutes in development)
-  const healthCheckInterval = isDevelopment ? 120000 : 60000;
-  setInterval(async () => {
+  // Adjust intervals based on environment
+  const healthCheckInterval = isDevelopment ? 120000 : (isRailway ? 90000 : 60000);
+  const metricsInterval = isDevelopment ? 60000 : 30000;
+  
+  logger.info('Starting periodic monitoring', {
+    healthCheckInterval: healthCheckInterval / 1000 + 's',
+    metricsInterval: metricsInterval / 1000 + 's',
+    development: isDevelopment,
+    railway: !!isRailway
+  });
+  
+  // Health checks with safe error handling
+  safeSetInterval(async () => {
+    const startTime = Date.now();
+    
     try {
       await healthCheckManager.runAll();
       const health = healthCheckManager.getOverallHealth();
+      const duration = Date.now() - startTime;
       
       if (health.status !== 'healthy') {
         const logLevel = isDevelopment && health.status === 'degraded' ? 'debug' : 'warn';
         logger[logLevel]('System Health Check', { 
           health,
+          checkDuration: `${duration}ms`,
           developmentMode: isDevelopment,
           note: isDevelopment ? 'Health checks are more lenient in development' : undefined
         });
+      } else {
+        logger.debug('Health check completed', {
+          status: health.status,
+          duration: `${duration}ms`,
+          checks: health.checks
+        });
       }
     } catch (error) {
-      logger.error('Health check failed', error);
+      logger.error('Health check system error', error, {
+        duration: Date.now() - startTime
+      });
     }
-  }, healthCheckInterval);
+  }, healthCheckInterval, 'health-check');
 
-  // Monitor metrics every 30 seconds
-  setInterval(() => {
+  // Metrics monitoring with safe error handling
+  safeSetInterval(async () => {
     try {
       const systemMetrics = metricsCollector.getSystemMetrics();
       const apiMetrics = metricsCollector.getApiMetrics();
       
-      // Check alerts
-      alertManager.checkMetric('memory_usage', systemMetrics.memory.usagePercent);
-      alertManager.checkMetric('cpu_load', systemMetrics.cpu.loadAverage[0]);
-      alertManager.checkMetric('response_time', apiMetrics.responses.averageTime);
+      // Check alerts with safe error handling
+      try {
+        alertManager.checkMetric('memory_usage', systemMetrics.memory.usagePercent, {
+          systemMemory: `${systemMetrics.memory.systemUsed / 1024 / 1024 / 1024}GB used`
+        });
+        
+        alertManager.checkMetric('cpu_load', systemMetrics.cpu.loadAverage[0], {
+          cores: systemMetrics.cpu.cores,
+          model: systemMetrics.cpu.model
+        });
+        
+        if (apiMetrics.responses.averageTime > 0) {
+          alertManager.checkMetric('response_time', apiMetrics.responses.averageTime, {
+            totalRequests: apiMetrics.requests.total,
+            p95: apiMetrics.responses.p95
+          });
+        }
+        
+        const errorRate = apiMetrics.requests.total > 0 
+          ? (apiMetrics.errors.total / apiMetrics.requests.total) * 100 
+          : 0;
+          
+        if (errorRate > 0) {
+          alertManager.checkMetric('error_rate', errorRate, {
+            totalErrors: apiMetrics.errors.total,
+            totalRequests: apiMetrics.requests.total
+          });
+        }
+      } catch (alertError) {
+        logger.warn('Alert checking failed', alertError);
+      }
       
-      const errorRate = (apiMetrics.errors.total / (apiMetrics.requests.total || 1)) * 100;
-      alertManager.checkMetric('error_rate', errorRate);
+      // Log periodic metrics in development
+      if (isDevelopment && Date.now() % 300000 < metricsInterval) { // Every 5 minutes
+        logger.debug('System metrics', {
+          memory: `${systemMetrics.memory.usagePercent.toFixed(1)}%`,
+          cpu: `Load: ${systemMetrics.cpu.loadAverage[0].toFixed(2)}`,
+          api: `${apiMetrics.requests.total} requests, ${apiMetrics.responses.averageTime.toFixed(0)}ms avg`
+        });
+      }
       
     } catch (error) {
-      logger.error('Metrics monitoring failed', error);
+      logger.error('Metrics collection failed', error);
     }
-  }, 30000);
+  }, metricsInterval, 'metrics-monitoring');
+  
+  // Process cleanup handlers
+  const cleanup = () => {
+    logger.info('Cleaning up monitoring intervals...');
+    clearAllIntervals();
+  };
+  
+  process.once('SIGTERM', cleanup);
+  process.once('SIGINT', cleanup);
+  process.once('exit', cleanup);
 };
 
 module.exports = {
@@ -543,5 +666,6 @@ module.exports = {
   HealthCheckManager,
   PerformanceMonitor,
   AlertManager,
-  startPeriodicMonitoring
+  startPeriodicMonitoring,
+  clearAllIntervals
 };
