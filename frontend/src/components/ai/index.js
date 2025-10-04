@@ -1,2 +1,0 @@
-// AI Components
-export default {};

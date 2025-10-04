@@ -21,4 +21,3 @@ export default function App({ Component, pageProps }) {
     </ErrorBoundary>
   );
 }
-import '../styles/esg-animations.css';

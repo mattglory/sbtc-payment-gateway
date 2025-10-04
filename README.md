@@ -1,270 +1,215 @@
-# 🚀 sBTC Payment Gateway
+# sBTC Payment Gateway
 
-**The First Professional Bitcoin Payment Infrastructure**
+**Stripe for Bitcoin - Accept sBTC payments with ease**
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Try%20Now-brightgreen?style=for-the-badge)](https://sbtcpaymentgateway-matt-glorys-projects.vercel.app)
 [![API Status](https://img.shields.io/badge/API-Production%20Ready-blue?style=for-the-badge)](https://sbtc-payment-api-production.up.railway.app/health)
-[![Stacks Competition](https://img.shields.io/badge/Stacks-Competition%20Entry-orange?style=for-the-badge)](./STACKS_COMPETITION.md)
 
-> **"Making Bitcoin payments as simple as credit card payments"**
+## Overview
 
-**🏆 Stacks Builders Competition Entry** - Complete production-ready Bitcoin payment gateway built on sBTC
+A professional payment gateway built on the Stacks blockchain that enables merchants to accept sBTC payments with a familiar Stripe-like developer experience. The platform provides a complete payment infrastructure including merchant onboarding, transaction processing, and real-time analytics.
 
-## Live Demo
+## Features (October 2025 Update)
 
-**[Try the Live Demo](https://sbtcpaymentgateway-matt-glorys-projects.vercel.app)**
+### Latest Enhancements
+- **Complete Transaction History** - Advanced filtering by status, date range, and amount
+- **Analytics Dashboard** - Real-time revenue tracking with visual insights
+- **Payment Monitoring** - Live status updates and webhook notifications
+- **Enhanced Reporting** - Comprehensive transaction data and export capabilities
 
-- **Frontend**: https://sbtcpaymentgateway-matt-glorys-projects.vercel.app
-- **Backend API**: https://sbtc-payment-api-production.up.railway.app
-- **Health Check**: https://sbtc-payment-api-production.up.railway.app/health
+### Core Features
+- **Developer-Friendly API** - RESTful endpoints following industry standards
+- **Smart Contract Integration** - Clarity-based payment processing on Stacks
+- **Mobile-Responsive Design** - Seamless experience across all devices
+- **Merchant Dashboard** - Business management and analytics interface
+- **Real-Time Updates** - WebSocket-based payment status notifications
+- **Security First** - API key authentication and comprehensive error handling
 
-## ⚡ Try It Right Now!
+## Tech Stack
 
-```bash
-# Test the live API instantly - this works right now!
-curl -X POST https://sbtc-payment-api-production.up.railway.app/api/payment-intents \
-  -H "Authorization: Bearer pk_test_demo" \
-  -H "Content-Type: application/json" \
-  -d '{"amount": 50000, "description": "Stacks Competition Demo"}'
-```
+### Frontend
+- **Framework**: Next.js 14
+- **Language**: TypeScript
+- **UI Library**: React 18
+- **Styling**: Tailwind CSS
+- **Charts**: Recharts
+- **HTTP Client**: Axios
 
-**[📖 Quick Start Guide](./QUICK_START.md)** | **[🏆 Competition Entry Details](./STACKS_COMPETITION.md)** | **[🚀 Deployment Guide](./DEPLOYMENT.md)**
+### Backend
+- **Runtime**: Node.js 20+
+- **Framework**: Express
+- **Database**: PostgreSQL (Production) / SQLite (Development)
+- **Blockchain**: Stacks Network, @stacks/transactions
+- **Security**: Helmet, Express Rate Limit
 
-## What Is This?
+### Blockchain
+- **Platform**: Stacks
+- **Smart Contract**: Clarity
+- **Network**: Testnet/Devnet
+- **Development**: Clarinet
 
-This is a **production-ready Bitcoin payment gateway** using sBTC on the Stacks blockchain - the first professional payment infrastructure that makes Bitcoin as easy to accept as credit cards. Built for the Stacks Builders Competition, it demonstrates the full potential of sBTC for mainstream commerce adoption.
-
-## Key Features
-
-- **Simple Integration** - Streamlined API following industry standards
-- **Real sBTC Processing** - Handles actual Bitcoin transactions via Stacks
-- **Complete Payment Flow** - From intent creation to confirmation
-- **Merchant Dashboard** - Business management interface
-- **Developer-First API** - RESTful endpoints with comprehensive documentation
-- **Production Ready** - Error handling, security, and monitoring built-in
+### Infrastructure
+- **API Deployment**: Railway
+- **Frontend Deployment**: Vercel
+- **Logging**: Winston
+- **Monitoring**: Health check endpoints
 
 ## Quick Start
 
-```javascript
-// Accept sBTC payments with minimal configuration
-const widget = new sBTCPaymentWidget("pk_test_your_key");
-await widget.create({ amount: 50000, description: "Purchase" });
-// Payment widget ready for customer interaction
+### Prerequisites
+```bash
+node >= 20.18.1
+npm >= 9.0.0
+clarinet >= 2.0.0
 ```
 
-## Architecture
+### Installation
 
-This is a complete payment ecosystem with four main components:
-
-### 1. Smart Contract (Clarity)
-
-- Payment intent creation and processing
-- Merchant registration system
-- Fee calculation (2.5% processing fee)
-- Event emission for real-time tracking
-
-### 2. Backend API (Node.js/Express)
-
-- RESTful endpoints matching Stripe's design patterns
-- Payment intent management
-- Merchant authentication and API keys
-- Real-time webhook system
-
-### 3. Frontend Application (React/TypeScript)
-
-- Professional payment widget interface
-- Merchant registration and dashboard
-- Mobile-responsive design
-- Real-time payment status updates
-
-### 4. Developer SDK
-
-- JavaScript library for easy integration
-- React components and hooks
-- Comprehensive error handling
-- Utility functions for Bitcoin/satoshi conversions
-
-## Technical Implementation
-
-### Payment Flow
-
-1. Merchant creates payment intent via API
-2. Customer sees professional payment interface
-3. Payment processed through Stacks smart contract
-4. Real-time status updates via webhooks
-5. Funds transferred minus processing fee
-
-### Security Features
-
-- API key authentication
-- Environment-based configuration
-- Input validation and sanitization
-- Error handling and logging
-- Rate limiting protection
-
-## Development Setup
-
+1. **Clone repository**
 ```bash
-# Clone repository
 git clone https://github.com/mattglory/sbtc-payment-gateway.git
 cd sbtc-payment-gateway
-
-# Deploy smart contract
-clarinet integrate
-
-# Start backend API
-cd backend
-npm install
-npm run dev
-
-# Start frontend application
-cd ../frontend
-npm install
-npm start
 ```
 
-## File Structure
+2. **Deploy smart contract**
+```bash
+clarinet integrate
+```
+
+3. **Start backend API**
+```bash
+cd backend
+npm install
+cp .env.example .env
+npm run dev
+```
+
+4. **Start frontend**
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+5. **Access application**
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:3001
+- Health Check: http://localhost:3001/health
+
+## API Documentation
+
+### Authentication
+All API requests require authentication using an API key:
+```bash
+Authorization: Bearer pk_test_your_api_key
+```
+
+### Key Endpoints
+
+**Create Payment Intent**
+```bash
+POST /api/payment-intents
+Content-Type: application/json
+
+{
+  "amount": 50000,
+  "description": "Product purchase"
+}
+```
+
+**Get Transaction History**
+```bash
+GET /api/transactions?status=completed&from=2025-01-01&to=2025-12-31
+```
+
+**Register Merchant**
+```bash
+POST /api/merchants/register
+Content-Type: application/json
+
+{
+  "businessName": "My Store",
+  "email": "merchant@store.com",
+  "stacksAddress": "ST1ABC123..."
+}
+```
+
+**Retrieve Payment Intent**
+```bash
+GET /api/payment-intents/:id
+```
+
+**Get Analytics**
+```bash
+GET /api/analytics/dashboard
+```
+
+### Live API Testing
+```bash
+curl -X POST https://sbtc-payment-api-production.up.railway.app/api/payment-intents \
+  -H "Authorization: Bearer pk_test_demo" \
+  -H "Content-Type: application/json" \
+  -d '{"amount": 50000, "description": "Test payment"}'
+```
+
+## Code4STX Submission
+
+### Development Timeline
+
+**September 2025** - Core Infrastructure
+- Smart contract development in Clarity
+- RESTful API implementation
+- Payment widget interface
+- Merchant registration system
+- Basic payment processing flow
+
+**October 2025** - Dashboard & Analytics
+- Complete transaction history with advanced filtering
+- Real-time analytics dashboard with revenue insights
+- Enhanced payment monitoring and status tracking
+- Performance optimizations and bug fixes
+- Production deployment on Railway and Vercel
+
+### Project Metrics
+- **Development Time**: 2 months
+- **Lines of Code**: 3,500+
+- **API Endpoints**: 12 RESTful routes
+- **Components**: 15+ React components
+- **Test Coverage**: Integration and E2E tests
+
+## Demo
+
+**Live Application**: https://sbtcpaymentgateway-matt-glorys-projects.vercel.app
+
+**Backend API**: https://sbtc-payment-api-production.up.railway.app
+
+### Test Credentials
+- API Key: `pk_test_demo`
+- Testnet enabled for safe testing
+
+## Project Structure
 
 ```
 sbtc-payment-gateway/
 ├── contracts/
-│   └── sbtc-payment-gateway.clar    # Smart contract
+│   └── sbtc-payment-gateway.clar    # Clarity smart contract
 ├── backend/
 │   ├── server.js                    # Express API server
-│   └── package.json                 # Backend dependencies
+│   ├── database/                    # Database schemas
+│   └── routes/                      # API route handlers
 ├── frontend/
 │   ├── src/
 │   │   ├── components/              # React components
+│   │   ├── pages/                   # Next.js pages
 │   │   └── services/                # API integration
-│   └── package.json                 # Frontend dependencies
+│   └── public/                      # Static assets
 └── settings/                        # Clarinet configuration
 ```
-
-## Competition Highlights
-
-**Built in 25 days for the Stacks Builders Competition**
-
-This project demonstrates:
-
-- **Complete MVP** - Not just a proof of concept, but a fully functional payment gateway
-- **Stripe-like Experience** - Familiar developer patterns that reduce adoption friction
-- **Real Bitcoin Integration** - Actual sBTC functionality on Stacks testnet
-- **Production Quality** - Comprehensive error handling, security, and documentation
-- **Developer-First Design** - Clean APIs, SDKs, and integration examples
-
-## API Documentation
-
-### Create Payment Intent
-
-```bash
-curl -X POST https://sbtc-payment-api-production.up.railway.app/api/payment-intents \
-  -H "Authorization: Bearer pk_test_your_api_key" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "amount": 50000,
-    "description": "Digital product purchase"
-  }'
-```
-
-### Register Merchant
-
-```bash
-curl -X POST https://sbtc-payment-api-production.up.railway.app/api/merchants/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "businessName": "My Store",
-    "email": "merchant@store.com",
-    "stacksAddress": "ST1ABC123..."
-  }'
-```
-
-## Smart Contract Functions
-
-```clarity
-;; Register as merchant
-(contract-call? .sbtc-payment-gateway register-merchant)
-
-;; Create payment intent
-(contract-call? .sbtc-payment-gateway create-payment-intent
-  "payment-123"
-  u50000
-  (some u"Product purchase"))
-
-;; Process payment
-(contract-call? .sbtc-payment-gateway process-payment "payment-123")
-```
-
-## Technology Stack
-
-- **Blockchain**: Stacks (Testnet)
-- **Smart Contracts**: Clarity
-- **Backend**: Node.js, Express
-- **Frontend**: React, TypeScript, Tailwind CSS
-- **Deployment**: Railway (API), Vercel (Frontend)
-- **Development**: Clarinet, VS Code
-
-## Competition Metrics
-
-- **Development Time**: 25 days
-- **Lines of Code**: 2,000+
-- **Components Built**: 5 major systems
-- **API Endpoints**: 8 RESTful routes
-- **Test Coverage**: End-to-end functionality verified
-
-## Why This Matters
-
-Bitcoin adoption requires developer-friendly tools. This project bridges the gap between Bitcoin's potential and practical implementation by providing:
-
-1. **Familiar Patterns** - Developers already know how to use Stripe-like APIs
-2. **Reduced Complexity** - Abstract away blockchain intricacies
-3. **Complete Solution** - Not just payments, but merchant management and analytics
-4. **Production Ready** - Built with real-world deployment in mind
-
-## Future Roadmap
-
-- Mainnet deployment with real sBTC integration
-- Advanced merchant dashboard with analytics
-- Subscription and recurring payment support
-- Multi-currency support beyond sBTC
-- Mobile SDKs for iOS and Android
-- Advanced fraud detection and prevention
-
-## Contributing
-
-This project is open source and welcomes contributions. Areas where help is needed:
-
-- Additional payment methods
-- Enhanced security features
-- Mobile app development
-- Documentation improvements
-- Testing and bug fixes
-
-## Contact
-
-For questions, support, or collaboration:
-
-- **Developer**: Matt Glory
-- **Email**: mattglory14@gmail.com
-- **GitHub**: https://github.com/mattglory/sbtc-payment-gateway  
-- **Live Demo**: https://sbtcpaymentgateway-matt-glorys-projects.vercel.app
-- **Location**: United Kingdom
-
-Feel free to open an issue on GitHub or reach out via email for technical support or partnership inquiries.
 
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
-## Acknowledgments
-
-- **Stacks Foundation** for the excellent competition and ecosystem
-- **Hiro** for comprehensive developer tools
-- **Bitcoin Community** for inspiring decentralized innovation
-
 ---
 
-**Built for the Stacks ecosystem**
-
-_Professional Bitcoin payment infrastructure for modern applications_
-# Local build verified working - Sun, Sep 14, 2025  2:35:04 PM
-# Force clean deploy
+**Built for Code4STX** | [GitHub](https://github.com/mattglory/sbtc-payment-gateway) | [Live Demo](https://sbtcpaymentgateway-matt-glorys-projects.vercel.app)
