@@ -5,8 +5,8 @@
 
 import { AppConfig, UserSession, showConnect, openContractCall } from '@stacks/connect';
 import {
-  StacksTestnet,
-  StacksMainnet
+  STACKS_TESTNET,
+  STACKS_MAINNET
 } from '@stacks/network';
 import {
   AnchorMode,
@@ -52,7 +52,7 @@ class WalletService {
     
     // Initialize network based on environment
     this.isMainnet = process.env.REACT_APP_STACKS_NETWORK === 'mainnet';
-    this.network = this.isMainnet ? new StacksMainnet() : new StacksTestnet();
+    this.network = this.isMainnet ? STACKS_MAINNET : STACKS_TESTNET;
     
     this.contractAddress = process.env.REACT_APP_CONTRACT_ADDRESS || 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM';
     this.contractName = 'sbtc-payment-gateway';
