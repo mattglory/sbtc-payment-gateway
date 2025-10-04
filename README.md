@@ -47,7 +47,7 @@ This is a **production-ready Bitcoin payment gateway** using sBTC on the Stacks 
 
 ```javascript
 // Accept sBTC payments with minimal configuration
-const widget = new SBTCPaymentWidget("pk_test_your_key");
+const widget = new sBTCPaymentWidget("pk_test_your_key");
 await widget.create({ amount: 50000, description: "Purchase" });
 // Payment widget ready for customer interaction
 ```

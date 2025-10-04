@@ -1,0 +1,451 @@
+name: Comprehensive Test Suite
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  NODE_VERSION: '20.x'
+  CACHE_NAME: node-modules
+
+jobs:
+  # Job 1: Environment validation and setup
+  setup:
+    name: Setup and Validation
+    runs-on: ubuntu-latest
+    outputs:
+      cache-hit: ${{ steps.cache.outputs.cache-hit }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Cache dependencies
+        id: cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-${{ env.CACHE_NAME }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ env.CACHE_NAME }}-
+
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Validate environment
+        run: npm run env:validate
+
+  # Job 2: Static analysis (linting, type checking)
+  static-analysis:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Restore dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-${{ env.CACHE_NAME }}-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install dependencies
+        if: needs.setup.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run TypeScript type checking
+        run: npm run type-check
+
+      - name: Check code formatting
+        run: npx prettier --check "src/**/*.{js,jsx,ts,tsx,json,css,md}"
+
+  # Job 3: Unit and component tests
+  unit-tests:
+    name: Unit & Component Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    strategy:
+      matrix:
+        test-group: [unit, components, integration]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Restore dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-${{ env.CACHE_NAME }}-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install dependencies
+        if: needs.setup.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Run unit tests
+        if: matrix.test-group == 'unit'
+        run: npm test -- --testPathPattern="__tests__/(api|utils)" --coverage --coverageReporters=lcov
+        env:
+          CI: true
+
+      - name: Run component tests
+        if: matrix.test-group == 'components'
+        run: npm test -- --testPathPattern="__tests__/components" --coverage --coverageReporters=lcov
+        env:
+          CI: true
+
+      - name: Run integration tests
+        if: matrix.test-group == 'integration'
+        run: npm test -- --testPathPattern="__tests__/integration" --coverage --coverageReporters=lcov
+        env:
+          CI: true
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info
+          flags: ${{ matrix.test-group }}
+          name: ${{ matrix.test-group }}-coverage
+          fail_ci_if_error: false
+
+  # Job 4: Security tests
+  security-tests:
+    name: Security Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Restore dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-${{ env.CACHE_NAME }}-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install dependencies
+        if: needs.setup.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Run security tests
+        run: npm test -- --testPathPattern="__tests__/security" --verbose
+        env:
+          CI: true
+
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate
+
+      - name: Check for security vulnerabilities
+        run: |
+          npx audit-ci --moderate
+        continue-on-error: true
+
+  # Job 5: Performance tests
+  performance-tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Restore dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-${{ env.CACHE_NAME }}-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install dependencies
+        if: needs.setup.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Run performance tests
+        run: npm test -- --testPathPattern="__tests__/performance" --verbose --detectOpenHandles
+        env:
+          CI: true
+          NODE_OPTIONS: "--max-old-space-size=4096"
+
+      - name: Performance benchmark
+        run: |
+          echo "Performance test results:" > performance-results.txt
+          npm test -- --testPathPattern="__tests__/performance" --verbose --silent | grep -E "(PASS|FAIL|performance|duration|ms)" >> performance-results.txt || true
+
+      - name: Upload performance results
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-results
+          path: performance-results.txt
+
+  # Job 6: Build and deployment tests
+  build-tests:
+    name: Build & Deployment Tests
+    runs-on: ubuntu-latest
+    needs: [static-analysis, unit-tests]
+    strategy:
+      matrix:
+        environment: [development, production]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Restore dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-${{ env.CACHE_NAME }}-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set environment variables
+        run: |
+          if [ "${{ matrix.environment }}" = "production" ]; then
+            echo "NODE_ENV=production" >> $GITHUB_ENV
+            echo "NEXT_PUBLIC_APP_ENV=production" >> $GITHUB_ENV
+          else
+            echo "NODE_ENV=development" >> $GITHUB_ENV
+            echo "NEXT_PUBLIC_APP_ENV=development" >> $GITHUB_ENV
+          fi
+
+      - name: Build application
+        run: npm run build
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || 'sk-test-key-for-build' }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY || 'sk-ant-test-key-for-build' }}
+
+      - name: Test build output
+        run: |
+          # Check if build files exist
+          test -d .next
+          test -f .next/BUILD_ID
+
+          # Check for any build errors in output
+          if [ -f .next/build-manifest.json ]; then
+            echo "✅ Build manifest created successfully"
+          else
+            echo "❌ Build manifest missing"
+            exit 1
+          fi
+
+      - name: Analyze bundle size
+        if: matrix.environment == 'production'
+        run: |
+          npm run build:analyze
+          # Check bundle size limits
+          BUNDLE_SIZE=$(du -sb .next/static | cut -f1)
+          MAX_BUNDLE_SIZE=52428800  # 50MB in bytes
+
+          if [ $BUNDLE_SIZE -gt $MAX_BUNDLE_SIZE ]; then
+            echo "❌ Bundle size ($BUNDLE_SIZE bytes) exceeds limit ($MAX_BUNDLE_SIZE bytes)"
+            exit 1
+          else
+            echo "✅ Bundle size ($BUNDLE_SIZE bytes) within limits"
+          fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-${{ matrix.environment }}
+          path: |
+            .next/
+            !.next/cache
+          retention-days: 7
+
+  # Job 7: End-to-end tests (if applicable)
+  e2e-tests:
+    name: End-to-End Tests
+    runs-on: ubuntu-latest
+    needs: build-tests
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-production
+
+      - name: Start application
+        run: |
+          npm start &
+          sleep 10  # Wait for app to start
+        env:
+          PORT: 3000
+
+      - name: Health check
+        run: |
+          curl -f http://localhost:3000/api/health || exit 1
+          curl -f http://localhost:3000/api/status || exit 1
+
+      - name: Stop application
+        run: pkill -f "npm start" || true
+
+  # Job 8: Test result aggregation and reporting
+  test-results:
+    name: Test Results & Reporting
+    runs-on: ubuntu-latest
+    needs: [static-analysis, unit-tests, security-tests, performance-tests, build-tests]
+    if: always()
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Generate test report
+        run: |
+          echo "# Test Results Summary" > test-report.md
+          echo "" >> test-report.md
+          echo "## Job Status" >> test-report.md
+          echo "- Static Analysis: ${{ needs.static-analysis.result }}" >> test-report.md
+          echo "- Unit Tests: ${{ needs.unit-tests.result }}" >> test-report.md
+          echo "- Security Tests: ${{ needs.security-tests.result }}" >> test-report.md
+          echo "- Performance Tests: ${{ needs.performance-tests.result }}" >> test-report.md
+          echo "- Build Tests: ${{ needs.build-tests.result }}" >> test-report.md
+          echo "" >> test-report.md
+          echo "## Coverage Information" >> test-report.md
+          echo "Coverage reports have been uploaded to Codecov." >> test-report.md
+          echo "" >> test-report.md
+          echo "## Performance Results" >> test-report.md
+          if [ -f performance-results/performance-results.txt ]; then
+            cat performance-results/performance-results.txt >> test-report.md
+          else
+            echo "Performance results not available." >> test-report.md
+          fi
+
+      - name: Upload test report
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-report
+          path: test-report.md
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('test-report.md', 'utf8');
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
+
+  # Job 9: Deployment readiness check
+  deployment-check:
+    name: Deployment Readiness
+    runs-on: ubuntu-latest
+    needs: [static-analysis, unit-tests, security-tests, build-tests]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Check all requirements
+        run: |
+          echo "Checking deployment readiness..."
+
+          # Check if all required jobs passed
+          if [ "${{ needs.static-analysis.result }}" != "success" ]; then
+            echo "❌ Static analysis failed"
+            exit 1
+          fi
+
+          if [ "${{ needs.unit-tests.result }}" != "success" ]; then
+            echo "❌ Unit tests failed"
+            exit 1
+          fi
+
+          if [ "${{ needs.security-tests.result }}" != "success" ]; then
+            echo "❌ Security tests failed"
+            exit 1
+          fi
+
+          if [ "${{ needs.build-tests.result }}" != "success" ]; then
+            echo "❌ Build tests failed"
+            exit 1
+          fi
+
+          echo "✅ All checks passed - ready for deployment"
+
+      - name: Trigger deployment
+        if: success()
+        run: |
+          echo "All tests passed! Application is ready for deployment to production."
+          echo "Deployment can be triggered manually or automatically based on your workflow."
+
+# Cleanup job
+  cleanup:
+    name: Cleanup
+    runs-on: ubuntu-latest
+    needs: [test-results]
+    if: always()
+    steps:
+      - name: Cleanup artifacts
+        run: |
+          echo "Cleaning up temporary files and caches..."
+          # This step can include cleanup commands if needed

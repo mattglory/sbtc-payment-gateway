@@ -1,0 +1,2 @@
+// AI Library
+export default {};

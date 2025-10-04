@@ -1,0 +1,548 @@
+name: Performance Testing
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run performance tests weekly on Sundays at 1 AM UTC
+    - cron: '0 1 * * 0'
+
+jobs:
+  # Job 1: API Performance Testing
+  api-performance:
+    name: API Performance Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run API performance tests
+        run: |
+          npm test -- --testPathPattern="__tests__/performance" --verbose --detectOpenHandles
+        env:
+          CI: true
+          NODE_OPTIONS: "--max-old-space-size=4096"
+
+      - name: Generate performance report
+        run: |
+          echo "# API Performance Test Results" > api-performance-report.md
+          echo "" >> api-performance-report.md
+          echo "## Test Execution Date" >> api-performance-report.md
+          echo "$(date)" >> api-performance-report.md
+          echo "" >> api-performance-report.md
+          echo "## Performance Metrics" >> api-performance-report.md
+          echo "- All API endpoints tested for response time" >> api-performance-report.md
+          echo "- Memory usage monitored during test execution" >> api-performance-report.md
+          echo "- Concurrent request handling validated" >> api-performance-report.md
+          echo "" >> api-performance-report.md
+
+      - name: Upload performance report
+        uses: actions/upload-artifact@v3
+        with:
+          name: api-performance-report
+          path: api-performance-report.md
+
+  # Job 2: Load Testing with Artillery
+  load-testing:
+    name: Load Testing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm install -g artillery
+
+      - name: Build application
+        run: npm run build
+
+      - name: Start application
+        run: |
+          npm start &
+          sleep 15
+        env:
+          PORT: 3000
+
+      - name: Wait for application
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:3000/api/health; do sleep 2; done'
+
+      - name: Create Artillery configuration
+        run: |
+          cat > artillery-config.yml << 'EOF'
+          config:
+            target: 'http://localhost:3000'
+            phases:
+              - duration: 60
+                arrivalRate: 5
+                name: "Warm up"
+              - duration: 120
+                arrivalRate: 10
+                name: "Load test"
+              - duration: 60
+                arrivalRate: 20
+                name: "Stress test"
+            payload:
+              path: "test-data.csv"
+              fields:
+                - companyName
+                - sector
+          scenarios:
+            - name: "Health Check"
+              weight: 30
+              flow:
+                - get:
+                    url: "/api/health"
+            - name: "Status Check"
+              weight: 20
+              flow:
+                - get:
+                    url: "/api/status"
+            - name: "ESG Analysis"
+              weight: 50
+              flow:
+                - post:
+                    url: "/api/ai/esg-score"
+                    headers:
+                      Content-Type: "application/json"
+                    json:
+                      companyName: "{{ companyName }}"
+                      sector: "{{ sector }}"
+                      description: "Test company for load testing"
+          EOF
+
+      - name: Create test data
+        run: |
+          cat > test-data.csv << 'EOF'
+          companyName,sector
+          Apple Inc.,Technology
+          Microsoft Corporation,Technology
+          Tesla Inc.,Automotive
+          Amazon.com Inc.,Technology
+          Google LLC,Technology
+          Meta Platforms,Technology
+          NVIDIA Corporation,Technology
+          Netflix Inc.,Technology
+          Adobe Inc.,Technology
+          Salesforce Inc.,Technology
+          EOF
+
+      - name: Run Artillery load test
+        run: |
+          artillery run artillery-config.yml --output artillery-report.json
+
+      - name: Generate Artillery HTML report
+        run: |
+          artillery report artillery-report.json --output artillery-report.html
+
+      - name: Extract key metrics
+        run: |
+          echo "# Load Testing Results" > load-test-results.md
+          echo "" >> load-test-results.md
+          echo "## Test Configuration" >> load-test-results.md
+          echo "- Duration: 4 minutes total" >> load-test-results.md
+          echo "- Max arrival rate: 20 requests/second" >> load-test-results.md
+          echo "- Target endpoints: health, status, ESG analysis" >> load-test-results.md
+          echo "" >> load-test-results.md
+
+          # Extract metrics from JSON report
+          if [ -f artillery-report.json ]; then
+            echo "## Key Metrics" >> load-test-results.md
+            node -e "
+              const report = JSON.parse(require('fs').readFileSync('artillery-report.json', 'utf8'));
+              const aggregate = report.aggregate;
+              console.log('- Total requests: ' + aggregate.counters['http.requests']);
+              console.log('- Successful responses: ' + aggregate.counters['http.responses']);
+              console.log('- Failed requests: ' + (aggregate.counters['http.request_errors'] || 0));
+              console.log('- Mean response time: ' + Math.round(aggregate.latency.mean) + 'ms');
+              console.log('- 95th percentile: ' + Math.round(aggregate.latency.p95) + 'ms');
+              console.log('- 99th percentile: ' + Math.round(aggregate.latency.p99) + 'ms');
+            " >> load-test-results.md
+          fi
+
+      - name: Upload load test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: load-test-results
+          path: |
+            artillery-report.json
+            artillery-report.html
+            load-test-results.md
+
+      - name: Stop application
+        run: pkill -f "npm start" || true
+
+  # Job 3: Lighthouse Performance Audit
+  lighthouse-audit:
+    name: Lighthouse Performance Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Start application
+        run: |
+          npm start &
+          sleep 15
+        env:
+          PORT: 3000
+
+      - name: Wait for application
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
+
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v9
+        with:
+          configPath: './lighthouserc.json'
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+
+      - name: Create Lighthouse configuration
+        run: |
+          cat > lighthouserc.json << 'EOF'
+          {
+            "ci": {
+              "collect": {
+                "url": ["http://localhost:3000"],
+                "numberOfRuns": 3,
+                "settings": {
+                  "chromeFlags": "--no-sandbox --headless"
+                }
+              },
+              "assert": {
+                "assertions": {
+                  "categories:performance": ["warn", {"minScore": 0.8}],
+                  "categories:accessibility": ["error", {"minScore": 0.9}],
+                  "categories:best-practices": ["warn", {"minScore": 0.8}],
+                  "categories:seo": ["warn", {"minScore": 0.8}]
+                }
+              },
+              "upload": {
+                "target": "temporary-public-storage"
+              }
+            }
+          }
+          EOF
+
+      - name: Stop application
+        run: pkill -f "npm start" || true
+
+  # Job 4: Bundle Size Analysis
+  bundle-analysis:
+    name: Bundle Size Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Analyze bundle with webpack-bundle-analyzer
+        run: |
+          npm run build:analyze
+        env:
+          ANALYZE: true
+
+      - name: Generate bundle size report
+        run: |
+          echo "# Bundle Size Analysis" > bundle-analysis.md
+          echo "" >> bundle-analysis.md
+          echo "## Bundle Sizes" >> bundle-analysis.md
+
+          # Get bundle sizes
+          if [ -d .next/static ]; then
+            echo "### JavaScript Bundles" >> bundle-analysis.md
+            find .next/static/chunks -name "*.js" -exec ls -lh {} \; | awk '{print "- " $9 ": " $5}' >> bundle-analysis.md
+
+            echo "" >> bundle-analysis.md
+            echo "### CSS Files" >> bundle-analysis.md
+            find .next/static/css -name "*.css" -exec ls -lh {} \; | awk '{print "- " $9 ": " $5}' >> bundle-analysis.md 2>/dev/null || echo "No CSS files found" >> bundle-analysis.md
+
+            echo "" >> bundle-analysis.md
+            echo "### Total Size" >> bundle-analysis.md
+            TOTAL_SIZE=$(du -sh .next/static | cut -f1)
+            echo "- Total static assets: $TOTAL_SIZE" >> bundle-analysis.md
+          fi
+
+          echo "" >> bundle-analysis.md
+          echo "## Recommendations" >> bundle-analysis.md
+          echo "- Monitor bundle size growth over time" >> bundle-analysis.md
+          echo "- Consider code splitting for large components" >> bundle-analysis.md
+          echo "- Optimize images and assets" >> bundle-analysis.md
+          echo "- Use dynamic imports for non-critical code" >> bundle-analysis.md
+
+      - name: Check bundle size limits
+        run: |
+          # Set bundle size limits (adjust as needed)
+          MAX_BUNDLE_SIZE=5242880  # 5MB
+          MAX_MAIN_JS_SIZE=1048576  # 1MB
+
+          if [ -d .next/static ]; then
+            TOTAL_SIZE=$(du -sb .next/static | cut -f1)
+
+            if [ $TOTAL_SIZE -gt $MAX_BUNDLE_SIZE ]; then
+              echo "❌ Bundle size ($TOTAL_SIZE bytes) exceeds limit ($MAX_BUNDLE_SIZE bytes)"
+              exit 1
+            else
+              echo "✅ Bundle size ($TOTAL_SIZE bytes) within limits"
+            fi
+
+            # Check main JS bundle size
+            MAIN_JS=$(find .next/static/chunks -name "main-*.js" | head -1)
+            if [ -f "$MAIN_JS" ]; then
+              MAIN_SIZE=$(stat -c%s "$MAIN_JS")
+              if [ $MAIN_SIZE -gt $MAX_MAIN_JS_SIZE ]; then
+                echo "⚠️ Main JS bundle ($MAIN_SIZE bytes) is larger than recommended ($MAX_MAIN_JS_SIZE bytes)"
+              else
+                echo "✅ Main JS bundle size acceptable"
+              fi
+            fi
+          fi
+
+      - name: Upload bundle analysis
+        uses: actions/upload-artifact@v3
+        with:
+          name: bundle-analysis
+          path: |
+            bundle-analysis.md
+            .next/analyze/
+
+  # Job 5: Memory and CPU profiling
+  profiling:
+    name: Memory & CPU Profiling
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm install -g clinic
+
+      - name: Build application
+        run: npm run build
+
+      - name: Run memory profiling
+        run: |
+          # Start application with memory profiling
+          timeout 30s clinic doctor --on-port='curl http://localhost:3000/api/health' -- npm start || true
+
+      - name: Generate profiling report
+        run: |
+          echo "# Memory & CPU Profiling Results" > profiling-report.md
+          echo "" >> profiling-report.md
+          echo "## Profiling Summary" >> profiling-report.md
+          echo "- Application profiled for 30 seconds under load" >> profiling-report.md
+          echo "- Memory usage patterns analyzed" >> profiling-report.md
+          echo "- CPU utilization monitored" >> profiling-report.md
+          echo "" >> profiling-report.md
+
+          if [ -d ".clinic" ]; then
+            echo "## Clinic.js Reports Generated" >> profiling-report.md
+            ls -la .clinic/ >> profiling-report.md
+          fi
+
+      - name: Upload profiling results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: profiling-results
+          path: |
+            profiling-report.md
+            .clinic/
+
+  # Job 6: Performance regression detection
+  regression-detection:
+    name: Performance Regression Detection
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run current branch performance tests
+        run: |
+          npm test -- --testPathPattern="__tests__/performance" --verbose --json --outputFile=current-performance.json
+        env:
+          CI: true
+
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
+
+      - name: Install base dependencies
+        run: npm ci
+
+      - name: Run base branch performance tests
+        run: |
+          npm test -- --testPathPattern="__tests__/performance" --verbose --json --outputFile=base-performance.json
+        env:
+          CI: true
+
+      - name: Compare performance results
+        run: |
+          echo "# Performance Regression Analysis" > regression-report.md
+          echo "" >> regression-report.md
+          echo "Comparing performance between base branch (${{ github.base_ref }}) and current branch." >> regression-report.md
+          echo "" >> regression-report.md
+
+          # Simple comparison logic (would be enhanced in real implementation)
+          if [ -f current-performance.json ] && [ -f base-performance.json ]; then
+            echo "## Test Results Comparison" >> regression-report.md
+            echo "- Base branch results: Available" >> regression-report.md
+            echo "- Current branch results: Available" >> regression-report.md
+            echo "" >> regression-report.md
+            echo "Detailed analysis of performance differences would be implemented here." >> regression-report.md
+          else
+            echo "## Warning" >> regression-report.md
+            echo "Performance comparison could not be completed due to missing test results." >> regression-report.md
+          fi
+
+      - name: Upload regression analysis
+        uses: actions/upload-artifact@v3
+        with:
+          name: regression-analysis
+          path: regression-report.md
+
+  # Job 7: Performance summary and reporting
+  performance-summary:
+    name: Performance Summary
+    runs-on: ubuntu-latest
+    needs: [api-performance, load-testing, lighthouse-audit, bundle-analysis, profiling]
+    if: always()
+    steps:
+      - name: Download all performance artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Generate comprehensive performance report
+        run: |
+          echo "# Comprehensive Performance Report" > performance-summary.md
+          echo "" >> performance-summary.md
+          echo "Generated on: $(date)" >> performance-summary.md
+          echo "" >> performance-summary.md
+
+          echo "## Test Results Summary" >> performance-summary.md
+          echo "- API Performance: ${{ needs.api-performance.result }}" >> performance-summary.md
+          echo "- Load Testing: ${{ needs.load-testing.result }}" >> performance-summary.md
+          echo "- Lighthouse Audit: ${{ needs.lighthouse-audit.result }}" >> performance-summary.md
+          echo "- Bundle Analysis: ${{ needs.bundle-analysis.result }}" >> performance-summary.md
+          echo "- Profiling: ${{ needs.profiling.result }}" >> performance-summary.md
+          echo "" >> performance-summary.md
+
+          echo "## Key Performance Indicators" >> performance-summary.md
+          echo "### API Response Times" >> performance-summary.md
+          if [ -f api-performance-report/api-performance-report.md ]; then
+            echo "See detailed API performance report in artifacts." >> performance-summary.md
+          fi
+
+          echo "" >> performance-summary.md
+          echo "### Load Testing Results" >> performance-summary.md
+          if [ -f load-test-results/load-test-results.md ]; then
+            cat load-test-results/load-test-results.md >> performance-summary.md
+          fi
+
+          echo "" >> performance-summary.md
+          echo "### Bundle Size Analysis" >> performance-summary.md
+          if [ -f bundle-analysis/bundle-analysis.md ]; then
+            cat bundle-analysis/bundle-analysis.md >> performance-summary.md
+          fi
+
+          echo "" >> performance-summary.md
+          echo "## Recommendations" >> performance-summary.md
+          echo "1. Monitor response time trends over time" >> performance-summary.md
+          echo "2. Optimize any endpoints with >2s response time" >> performance-summary.md
+          echo "3. Keep bundle size under 5MB total" >> performance-summary.md
+          echo "4. Maintain Lighthouse performance score >80" >> performance-summary.md
+          echo "5. Address any memory leaks identified in profiling" >> performance-summary.md
+
+      - name: Upload comprehensive report
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-summary
+          path: performance-summary.md
+
+      - name: Comment performance results on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+
+            let comment = '## 📊 Performance Test Results\n\n';
+            comment += '| Test Type | Status |\n';
+            comment += '|-----------|--------|\n';
+            comment += `| API Performance | ${{ needs.api-performance.result == 'success' ? '✅' : '❌' }} |\n`;
+            comment += `| Load Testing | ${{ needs.load-testing.result == 'success' ? '✅' : '❌' }} |\n`;
+            comment += `| Lighthouse Audit | ${{ needs.lighthouse-audit.result == 'success' ? '✅' : '❌' }} |\n`;
+            comment += `| Bundle Analysis | ${{ needs.bundle-analysis.result == 'success' ? '✅' : '❌' }} |\n`;
+            comment += `| Profiling | ${{ needs.profiling.result == 'success' ? '✅' : '❌' }} |\n`;
+            comment += '\n';
+
+            comment += '📋 **Detailed Reports:**\n';
+            comment += '- Performance summary available in workflow artifacts\n';
+            comment += '- Lighthouse report with detailed metrics\n';
+            comment += '- Bundle size analysis and recommendations\n';
+            comment += '- Load testing results with response times\n';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

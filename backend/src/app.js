@@ -45,6 +45,7 @@ const merchantRoutes = require('./routes/merchantRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const contractRoutes = require('./routes/contractRoutes');
 const bitcoinRoutes = require('./routes/bitcoinRoutes');
+const transactionRoutes = require('./routes/transactionRoutes');
 
 const app = express();
 
@@ -291,6 +292,7 @@ app.use('/api/merchants', merchantRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/contracts', contractRoutes);
 app.use('/api/bitcoin', bitcoinRoutes);
+app.use('/api/transactions', transactionRoutes);
 
 // Error handling middleware (order matters!)
 app.use(developmentErrorHandler);

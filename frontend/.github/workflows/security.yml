@@ -1,0 +1,410 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run security scans daily at 3 AM UTC
+    - cron: '0 3 * * *'
+
+jobs:
+  # Job 1: Dependency vulnerability scanning
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        run: |
+          npm audit --json > audit-results.json || true
+          npm audit --audit-level=high
+
+      - name: Upload audit results
+        uses: actions/upload-artifact@v3
+        with:
+          name: audit-results
+          path: audit-results.json
+
+      - name: Run Snyk vulnerability scan
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --json > snyk-results.json
+
+      - name: Upload Snyk results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: snyk-results
+          path: snyk-results.json
+
+  # Job 2: Static Application Security Testing (SAST)
+  sast-scan:
+    name: Static Security Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint security rules
+        run: |
+          npx eslint . --ext .js,.jsx,.ts,.tsx \
+            --config .eslintrc-security.json \
+            --format json \
+            --output-file eslint-security-results.json || true
+
+      - name: Create security ESLint config
+        run: |
+          cat > .eslintrc-security.json << 'EOF'
+          {
+            "extends": ["plugin:security/recommended"],
+            "plugins": ["security"],
+            "rules": {
+              "security/detect-object-injection": "error",
+              "security/detect-non-literal-regexp": "error",
+              "security/detect-non-literal-fs-filename": "error",
+              "security/detect-eval-with-expression": "error",
+              "security/detect-pseudoRandomBytes": "error",
+              "security/detect-possible-timing-attacks": "error"
+            }
+          }
+          EOF
+
+      - name: Install security plugins
+        run: npm install --no-save eslint-plugin-security
+
+      - name: Run security linting
+        run: |
+          npx eslint . --ext .js,.jsx,.ts,.tsx \
+            --config .eslintrc-security.json \
+            --format json \
+            --output-file eslint-security-results.json || true
+
+      - name: Upload security lint results
+        uses: actions/upload-artifact@v3
+        with:
+          name: eslint-security-results
+          path: eslint-security-results.json
+
+      - name: Run Semgrep security scan
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/secrets
+            p/owasp-top-ten
+            p/react
+          generateSarif: "1"
+
+      - name: Upload Semgrep results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
+
+  # Job 3: Secrets scanning
+  secrets-scan:
+    name: Secrets Detection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run TruffleHog
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+          extra_args: --debug --only-verified
+
+      - name: Run GitLeaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  # Job 4: Container security (if using Docker)
+  container-scan:
+    name: Container Security Scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          # Create a basic Dockerfile for scanning
+          cat > Dockerfile << 'EOF'
+          FROM node:20-alpine
+          WORKDIR /app
+          COPY package*.json ./
+          RUN npm ci --only=production
+          COPY . .
+          RUN npm run build
+          EXPOSE 3000
+          CMD ["npm", "start"]
+          EOF
+
+          docker build -t green-finance-app:latest .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'green-finance-app:latest'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Job 5: API security testing
+  api-security:
+    name: API Security Testing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run API security tests
+        run: npm test -- --testPathPattern="__tests__/security" --verbose
+        env:
+          CI: true
+
+      - name: Generate security test report
+        run: |
+          echo "# API Security Test Results" > api-security-report.md
+          echo "" >> api-security-report.md
+          echo "## Test Summary" >> api-security-report.md
+          echo "- Input validation tests" >> api-security-report.md
+          echo "- Authentication tests" >> api-security-report.md
+          echo "- Authorization tests" >> api-security-report.md
+          echo "- Rate limiting tests" >> api-security-report.md
+          echo "- CORS security tests" >> api-security-report.md
+          echo "" >> api-security-report.md
+
+      - name: Upload API security report
+        uses: actions/upload-artifact@v3
+        with:
+          name: api-security-report
+          path: api-security-report.md
+
+  # Job 6: OWASP ZAP dynamic security testing
+  dynamic-scan:
+    name: OWASP ZAP Dynamic Scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies and build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Start application
+        run: |
+          npm start &
+          sleep 15  # Wait for app to fully start
+        env:
+          PORT: 3000
+          NODE_ENV: production
+
+      - name: Wait for application to be ready
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:3000/api/health; do sleep 2; done'
+
+      - name: Run OWASP ZAP baseline scan
+        uses: zaproxy/action-baseline@v0.7.0
+        with:
+          target: 'http://localhost:3000'
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a'
+
+      - name: Create ZAP rules file
+        run: |
+          mkdir -p .zap
+          cat > .zap/rules.tsv << 'EOF'
+          10016	IGNORE	(X-Frame-Options Header Not Set)
+          10017	IGNORE	(Cross-Domain JavaScript Source File Inclusion)
+          EOF
+
+      - name: Stop application
+        run: pkill -f "npm start" || true
+
+  # Job 7: Security report aggregation
+  security-report:
+    name: Security Report
+    runs-on: ubuntu-latest
+    needs: [dependency-scan, sast-scan, secrets-scan, api-security]
+    if: always()
+    steps:
+      - name: Download all security artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Generate comprehensive security report
+        run: |
+          echo "# Comprehensive Security Report" > security-report.md
+          echo "" >> security-report.md
+          echo "Generated on: $(date)" >> security-report.md
+          echo "" >> security-report.md
+
+          echo "## Scan Results Summary" >> security-report.md
+          echo "- Dependency Scan: ${{ needs.dependency-scan.result }}" >> security-report.md
+          echo "- SAST Scan: ${{ needs.sast-scan.result }}" >> security-report.md
+          echo "- Secrets Scan: ${{ needs.secrets-scan.result }}" >> security-report.md
+          echo "- API Security: ${{ needs.api-security.result }}" >> security-report.md
+          echo "" >> security-report.md
+
+          echo "## Dependency Vulnerabilities" >> security-report.md
+          if [ -f audit-results/audit-results.json ]; then
+            echo "Audit results available in artifacts." >> security-report.md
+          else
+            echo "No audit results found." >> security-report.md
+          fi
+          echo "" >> security-report.md
+
+          echo "## Static Analysis Results" >> security-report.md
+          if [ -f eslint-security-results/eslint-security-results.json ]; then
+            echo "ESLint security results available in artifacts." >> security-report.md
+          else
+            echo "No ESLint security results found." >> security-report.md
+          fi
+          echo "" >> security-report.md
+
+          echo "## Recommendations" >> security-report.md
+          echo "1. Review all high and critical vulnerabilities" >> security-report.md
+          echo "2. Update dependencies with known vulnerabilities" >> security-report.md
+          echo "3. Address any secrets detected in the codebase" >> security-report.md
+          echo "4. Implement security headers for production deployment" >> security-report.md
+          echo "5. Regular security testing in CI/CD pipeline" >> security-report.md
+
+      - name: Upload comprehensive security report
+        uses: actions/upload-artifact@v3
+        with:
+          name: comprehensive-security-report
+          path: security-report.md
+
+      - name: Comment security results on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+
+            let comment = '## 🔒 Security Scan Results\n\n';
+            comment += '| Scan Type | Status |\n';
+            comment += '|-----------|--------|\n';
+            comment += `| Dependency Scan | ${{ needs.dependency-scan.result == 'success' ? '✅' : '❌' }} |\n`;
+            comment += `| SAST Scan | ${{ needs.sast-scan.result == 'success' ? '✅' : '❌' }} |\n`;
+            comment += `| Secrets Scan | ${{ needs.secrets-scan.result == 'success' ? '✅' : '❌' }} |\n`;
+            comment += `| API Security | ${{ needs.api-security.result == 'success' ? '✅' : '❌' }} |\n`;
+            comment += '\n';
+
+            if ('${{ needs.dependency-scan.result }}' !== 'success' ||
+                '${{ needs.sast-scan.result }}' !== 'success' ||
+                '${{ needs.secrets-scan.result }}' !== 'success' ||
+                '${{ needs.api-security.result }}' !== 'success') {
+              comment += '⚠️ **Security issues detected!** Please review the detailed reports in the workflow artifacts.\n';
+            } else {
+              comment += '✅ **All security scans passed!** No critical issues detected.\n';
+            }
+
+            comment += '\n📋 Detailed reports are available in the workflow artifacts.';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  # Job 8: Security notifications
+  security-notifications:
+    name: Security Notifications
+    runs-on: ubuntu-latest
+    needs: [dependency-scan, sast-scan, secrets-scan]
+    if: failure()
+    steps:
+      - name: Send security alert
+        uses: actions/github-script@v6
+        with:
+          script: |
+            // Create an issue for security failures
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Security Scan Failures Detected',
+              body: `
+              Security scans have failed in the latest workflow run.
+
+              **Workflow:** ${context.workflow}
+              **Run:** ${context.runNumber}
+              **Commit:** ${context.sha}
+
+              Please review the security scan results and address any critical issues immediately.
+
+              **Failed Scans:**
+              - Dependency Scan: ${{ needs.dependency-scan.result }}
+              - SAST Scan: ${{ needs.sast-scan.result }}
+              - Secrets Scan: ${{ needs.secrets-scan.result }}
+
+              [View Workflow Run](${context.payload.repository.html_url}/actions/runs/${context.runId})
+              `,
+              labels: ['security', 'urgent', 'bug']
+            });
+
+      - name: Send Slack notification (if configured)
+        if: env.SLACK_WEBHOOK_URL
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{"text":"🚨 Security scan failures detected in ${{ github.repository }}. Please review immediately!"}' \
+            ${{ secrets.SLACK_WEBHOOK_URL }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

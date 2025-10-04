@@ -44,7 +44,7 @@ Visit: **https://sbtcpaymentgateway-matt-glorys-projects.vercel.app**
 ### JavaScript/Node.js
 ```javascript
 // 1. Initialize the client
-const sbtcpay = new SBTCPaymentGateway('pk_test_demo');
+const sbtcpay = new sBTCPaymentGateway('pk_test_demo');
 
 // 2. Create a payment
 const payment = await sbtcpay.createPaymentIntent({

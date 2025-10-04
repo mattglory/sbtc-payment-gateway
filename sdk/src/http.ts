@@ -4,12 +4,12 @@
  */
 
 import { 
-  SBTCApiError, 
-  SBTCNetworkError, 
-  SBTCConfigurationError 
+  sBTCApiError, 
+  sBTCNetworkError, 
+  sBTCConfigurationError 
 } from './errors';
 import type { 
-  SBTCClientConfig, 
+  sBTCClientConfig, 
   ApiResponse, 
   ApiError 
 } from './types';
@@ -24,11 +24,11 @@ interface RequestOptions {
 }
 
 export class HttpClient {
-  private readonly config: Required<SBTCClientConfig>;
+  private readonly config: Required<sBTCClientConfig>;
 
-  constructor(config: SBTCClientConfig) {
+  constructor(config: sBTCClientConfig) {
     if (!config.apiKey) {
-      throw new SBTCConfigurationError('API key is required');
+      throw new sBTCConfigurationError('API key is required');
     }
 
     this.config = {
@@ -103,7 +103,7 @@ export class HttpClient {
         }
 
         if (!response.ok) {
-          throw SBTCApiError.fromResponse(responseData, response.status);
+          throw sBTCApiError.fromResponse(responseData, response.status);
         }
 
         return responseData as T;
@@ -112,7 +112,7 @@ export class HttpClient {
         lastError = error as Error;
 
         // Don't retry on certain errors
-        if (error instanceof SBTCApiError) {
+        if (error instanceof sBTCApiError) {
           // Don't retry 4xx errors (client errors)
           if (error.status >= 400 && error.status < 500) {
             throw error;
@@ -131,10 +131,10 @@ export class HttpClient {
     }
 
     // If we get here, all attempts failed
-    if (lastError instanceof SBTCApiError) {
+    if (lastError instanceof sBTCApiError) {
       throw lastError;
     } else {
-      throw SBTCNetworkError.fromError(lastError || new Error('Unknown network error'));
+      throw sBTCNetworkError.fromError(lastError || new Error('Unknown network error'));
     }
   }
 
@@ -159,7 +159,7 @@ export class HttpClient {
   // Update API key
   updateApiKey(newApiKey: string) {
     if (!newApiKey) {
-      throw new SBTCConfigurationError('API key cannot be empty');
+      throw new sBTCConfigurationError('API key cannot be empty');
     }
     (this.config as any).apiKey = newApiKey;
   }

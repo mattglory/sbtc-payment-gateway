@@ -4,9 +4,9 @@
  */
 
 import { HttpClient } from './http';
-import { SBTCValidationError } from './errors';
+import { sBTCValidationError } from './errors';
 import type {
-  SBTCClientConfig,
+  sBTCClientConfig,
   HealthStatus,
   MerchantRegistration,
   MerchantRegistrationResponse,
@@ -26,10 +26,10 @@ import type {
   ContractMerchantResponse,
 } from './types';
 
-export class SBTCPaymentGateway {
+export class sBTCPaymentGateway {
   private readonly http: HttpClient;
 
-  constructor(config: SBTCClientConfig) {
+  constructor(config: sBTCClientConfig) {
     this.http = new HttpClient(config);
   }
 
@@ -58,7 +58,7 @@ export class SBTCPaymentGateway {
    */
   async validateSpecificApiKey(apiKey: string): Promise<ApiKeyValidationResponse> {
     if (!apiKey) {
-      throw new SBTCValidationError('API key is required', 'apiKey', apiKey);
+      throw new sBTCValidationError('API key is required', 'apiKey', apiKey);
     }
 
     const payload: ApiKeyValidation = { apiKey };
@@ -108,7 +108,7 @@ export class SBTCPaymentGateway {
    */
   async getPaymentIntent(paymentId: string): Promise<PaymentIntent> {
     if (!paymentId) {
-      throw new SBTCValidationError('Payment ID is required', 'paymentId', paymentId);
+      throw new sBTCValidationError('Payment ID is required', 'paymentId', paymentId);
     }
 
     return this.http.get<PaymentIntent>(`/api/payment-intents/${paymentId}`, {
@@ -127,7 +127,7 @@ export class SBTCPaymentGateway {
     confirmation: PaymentConfirmation
   ): Promise<PaymentConfirmationResponse> {
     if (!paymentId) {
-      throw new SBTCValidationError('Payment ID is required', 'paymentId', paymentId);
+      throw new sBTCValidationError('Payment ID is required', 'paymentId', paymentId);
     }
 
     this.validatePaymentConfirmation(confirmation);
@@ -207,26 +207,26 @@ export class SBTCPaymentGateway {
 
   private validateMerchantRegistration(registration: MerchantRegistration): void {
     if (!registration.businessName) {
-      throw new SBTCValidationError('Business name is required', 'businessName', registration.businessName);
+      throw new sBTCValidationError('Business name is required', 'businessName', registration.businessName);
     }
 
     if (!registration.email) {
-      throw new SBTCValidationError('Email is required', 'email', registration.email);
+      throw new sBTCValidationError('Email is required', 'email', registration.email);
     }
 
     if (!registration.stacksAddress) {
-      throw new SBTCValidationError('Stacks address is required', 'stacksAddress', registration.stacksAddress);
+      throw new sBTCValidationError('Stacks address is required', 'stacksAddress', registration.stacksAddress);
     }
 
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(registration.email)) {
-      throw new SBTCValidationError('Invalid email format', 'email', registration.email);
+      throw new sBTCValidationError('Invalid email format', 'email', registration.email);
     }
 
     // Basic Stacks address validation (starts with SP or ST)
     if (!registration.stacksAddress.startsWith('SP') && !registration.stacksAddress.startsWith('ST')) {
-      throw new SBTCValidationError(
+      throw new sBTCValidationError(
         'Invalid Stacks address format',
         'stacksAddress',
         registration.stacksAddress
@@ -236,16 +236,16 @@ export class SBTCPaymentGateway {
 
   private validatePaymentIntentRequest(request: PaymentIntentRequest): void {
     if (!request.amount) {
-      throw new SBTCValidationError('Amount is required', 'amount', request.amount);
+      throw new sBTCValidationError('Amount is required', 'amount', request.amount);
     }
 
     if (typeof request.amount !== 'number' || request.amount <= 0) {
-      throw new SBTCValidationError('Amount must be a positive number', 'amount', request.amount);
+      throw new sBTCValidationError('Amount must be a positive number', 'amount', request.amount);
     }
 
     // Minimum amount validation (1000 satoshis = 0.00001 BTC)
     if (request.amount < 1000) {
-      throw new SBTCValidationError(
+      throw new sBTCValidationError(
         'Amount must be at least 1000 satoshis',
         'amount',
         request.amount
@@ -255,7 +255,7 @@ export class SBTCPaymentGateway {
 
   private validatePaymentConfirmation(confirmation: PaymentConfirmation): void {
     if (!confirmation.customerAddress) {
-      throw new SBTCValidationError(
+      throw new sBTCValidationError(
         'Customer address is required',
         'customerAddress',
         confirmation.customerAddress
@@ -263,7 +263,7 @@ export class SBTCPaymentGateway {
     }
 
     if (!confirmation.transactionId) {
-      throw new SBTCValidationError(
+      throw new sBTCValidationError(
         'Transaction ID is required',
         'transactionId',
         confirmation.transactionId
@@ -272,7 +272,7 @@ export class SBTCPaymentGateway {
 
     // Basic Stacks address validation
     if (!confirmation.customerAddress.startsWith('SP') && !confirmation.customerAddress.startsWith('ST')) {
-      throw new SBTCValidationError(
+      throw new sBTCValidationError(
         'Invalid customer address format',
         'customerAddress',
         confirmation.customerAddress
@@ -282,7 +282,7 @@ export class SBTCPaymentGateway {
     // Basic transaction ID validation (should be a hex string)
     const txIdRegex = /^[0-9a-fA-F]{64}$/;
     if (!txIdRegex.test(confirmation.transactionId)) {
-      throw new SBTCValidationError(
+      throw new sBTCValidationError(
         'Invalid transaction ID format',
         'transactionId',
         confirmation.transactionId
@@ -292,15 +292,15 @@ export class SBTCPaymentGateway {
 
   private validateContractPaymentRequest(request: ContractPaymentRequest): void {
     if (!request.paymentId) {
-      throw new SBTCValidationError('Payment ID is required', 'paymentId', request.paymentId);
+      throw new sBTCValidationError('Payment ID is required', 'paymentId', request.paymentId);
     }
 
     if (!request.amount || request.amount <= 0) {
-      throw new SBTCValidationError('Amount must be a positive number', 'amount', request.amount);
+      throw new sBTCValidationError('Amount must be a positive number', 'amount', request.amount);
     }
 
     if (!request.merchantPrivateKey) {
-      throw new SBTCValidationError(
+      throw new sBTCValidationError(
         'Merchant private key is required',
         'merchantPrivateKey',
         request.merchantPrivateKey
@@ -310,11 +310,11 @@ export class SBTCPaymentGateway {
 
   private validateContractProcessRequest(request: ContractProcessRequest): void {
     if (!request.paymentId) {
-      throw new SBTCValidationError('Payment ID is required', 'paymentId', request.paymentId);
+      throw new sBTCValidationError('Payment ID is required', 'paymentId', request.paymentId);
     }
 
     if (!request.customerAddress) {
-      throw new SBTCValidationError(
+      throw new sBTCValidationError(
         'Customer address is required',
         'customerAddress',
         request.customerAddress
@@ -322,7 +322,7 @@ export class SBTCPaymentGateway {
     }
 
     if (!request.merchantPrivateKey) {
-      throw new SBTCValidationError(
+      throw new sBTCValidationError(
         'Merchant private key is required',
         'merchantPrivateKey',
         request.merchantPrivateKey
@@ -332,15 +332,15 @@ export class SBTCPaymentGateway {
 
   private validateContractMerchantRequest(request: ContractMerchantRequest): void {
     if (!request.businessName) {
-      throw new SBTCValidationError('Business name is required', 'businessName', request.businessName);
+      throw new sBTCValidationError('Business name is required', 'businessName', request.businessName);
     }
 
     if (!request.email) {
-      throw new SBTCValidationError('Email is required', 'email', request.email);
+      throw new sBTCValidationError('Email is required', 'email', request.email);
     }
 
     if (!request.merchantPrivateKey) {
-      throw new SBTCValidationError(
+      throw new sBTCValidationError(
         'Merchant private key is required',
         'merchantPrivateKey',
         request.merchantPrivateKey

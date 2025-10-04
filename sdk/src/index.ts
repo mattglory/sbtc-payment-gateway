@@ -4,8 +4,8 @@
  * "Stripe for Bitcoin" - Making Bitcoin payments as simple as traditional payments
  */
 
-export { SBTCPaymentGateway } from './client';
-export { SBTCError, SBTCApiError, SBTCNetworkError } from './errors';
+export { sBTCPaymentGateway } from './client';
+export { sBTCError, sBTCApiError, sBTCNetworkError } from './errors';
 export * from './types';
 
 // React hooks (optional - only if React is available)

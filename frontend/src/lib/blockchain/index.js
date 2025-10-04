@@ -1,0 +1,2 @@
+// Blockchain Library
+export default {};
